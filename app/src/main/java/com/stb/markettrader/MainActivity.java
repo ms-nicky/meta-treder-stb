@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Tls12SocketFactory.enable();
+        Tls12SocketFactory.enable(getApplicationContext());
         setContentView(R.layout.activity_main);
 
         chart = findViewById(R.id.chart);
