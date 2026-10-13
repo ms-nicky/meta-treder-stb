@@ -124,14 +124,7 @@ public class MainActivity extends Activity {
 
     private void refreshButtonStates() {
         for (Button b : tfButtons) {
-            String t = b.getText().toString();
-            if (t.equals(currentInterval)) {
-                b.setTextColor(0xFF000000);
-                b.setBackgroundColor(0xFF0ECB81);
-            } else {
-                b.setTextColor(0xFFFFFFFF);
-                b.setBackgroundColor(0xFF1E2530);
-            }
+            b.setSelected(b.getText().toString().equals(currentInterval));
         }
     }
 

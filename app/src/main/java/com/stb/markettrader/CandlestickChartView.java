@@ -63,7 +63,7 @@ public class CandlestickChartView extends View {
     }
 
     private void init() {
-        setBackgroundColor(COLOR_BG);
+        setBackgroundColor(Color.TRANSPARENT);
         gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         gridPaint.setColor(COLOR_GRID);
         gridPaint.setStrokeWidth(1f);
