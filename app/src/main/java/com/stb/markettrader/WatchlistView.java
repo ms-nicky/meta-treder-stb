@@ -205,6 +205,19 @@ public class WatchlistView extends View {
     }
 
     @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_SCROLL && !items.isEmpty()) {
+            float v = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            if (v > 0 && selected > 0) selected--;
+            else if (v < 0 && selected < items.size() - 1) selected++;
+            ensureVisible();
+            invalidate();
+            return true;
+        }
+        return super.onGenericMotionEvent(event);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         float w = getWidth();

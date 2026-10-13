@@ -5,8 +5,11 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
@@ -47,6 +50,7 @@ public class MainActivity extends Activity {
     private TextView priceText;
     private TextView changeText;
     private TextView connText;
+    private TextView clockText;
     private Button updateButton;
     private TextView statHigh;
     private TextView statLow;
@@ -54,8 +58,10 @@ public class MainActivity extends Activity {
     private TextView statQVol;
     private Button btnInd;
     private Button btnSub;
+    private EditText searchText;
 
     private List<String> pairs = new ArrayList<String>();
+    private final List<String> viewPairs = new ArrayList<String>();
 
     private String currentPair = "BTCUSDT";
     private String currentInterval = "1m";
@@ -88,6 +94,14 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final Runnable clockTask = new Runnable() {
+        @Override
+        public void run() {
+            updateClock();
+            handler.postDelayed(this, 1000);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +114,8 @@ public class MainActivity extends Activity {
         priceText = findViewById(R.id.price);
         changeText = findViewById(R.id.change);
         connText = findViewById(R.id.conn);
+        clockText = findViewById(R.id.tv_clock);
+        searchText = findViewById(R.id.search);
         pairButton = findViewById(R.id.btn_pair);
         updateButton = findViewById(R.id.btn_update);
         btnInd = findViewById(R.id.btn_ind);
@@ -112,6 +128,7 @@ public class MainActivity extends Activity {
         pairs.addAll(java.util.Arrays.asList(CRYPTO_PAIRS));
         pairs.addAll(java.util.Arrays.asList(FOREX_PAIRS));
         pairs.addAll(java.util.Arrays.asList(METAL_PAIRS));
+        viewPairs.addAll(pairs);
 
         rebuildWatchlist();
         setupIntervalButtons();
@@ -119,6 +136,7 @@ public class MainActivity extends Activity {
         setupUpdateButton();
         setupIndicatorButtons();
         setupWatchlist();
+        setupSearch();
 
         symbolText.setText(currentPair);
         refreshButtonStates();
@@ -129,15 +147,26 @@ public class MainActivity extends Activity {
 
         handler.post(klinesTask);
         handler.post(tickerTask);
+        handler.post(clockTask);
         handler.postDelayed(marketTask, 1500);
 
         loadRemotePairs();
         checkForAppUpdate(false);
     }
 
+    private void updateClock() {
+        java.util.TimeZone wib = java.util.TimeZone.getTimeZone("Asia/Jakarta");
+        java.util.Date now = new java.util.Date();
+        java.text.SimpleDateFormat tf = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US);
+        tf.setTimeZone(wib);
+        java.text.SimpleDateFormat df = new java.text.SimpleDateFormat("EEE dd MMM", java.util.Locale.US);
+        df.setTimeZone(wib);
+        clockText.setText(df.format(now) + "  " + tf.format(now) + " WIB");
+    }
+
     private void rebuildWatchlist() {
         List<WatchlistView.Item> items = new ArrayList<WatchlistView.Item>();
-        for (String p : pairs) {
+        for (String p : viewPairs) {
             WatchlistView.Item it = new WatchlistView.Item(p);
             Ticker t = Cache.getTicker(p);
             if (t != null) {
@@ -153,7 +182,7 @@ public class MainActivity extends Activity {
 
     private void refreshWatchlistData() {
         List<WatchlistView.Item> items = new ArrayList<WatchlistView.Item>();
-        for (String p : pairs) {
+        for (String p : viewPairs) {
             WatchlistView.Item it = new WatchlistView.Item(p);
             Ticker t = Cache.getTicker(p);
             if (t != null) {
@@ -164,6 +193,53 @@ public class MainActivity extends Activity {
             items.add(it);
         }
         watchlist.setItems(items);
+    }
+
+    private void setupSearch() {
+        searchText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                applyFilter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        searchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent event) {
+                boolean enter = event != null
+                        && event.getKeyCode() == android.view.KeyEvent.KEYCODE_ENTER
+                        && event.getAction() == android.view.KeyEvent.ACTION_DOWN;
+                if (enter || actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+                        || actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                    String sel = watchlist.getSelectedPair();
+                    if (sel == null && !viewPairs.isEmpty()) sel = viewPairs.get(0);
+                    if (sel != null) {
+                        switchPair(sel);
+                        chart.requestFocus();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+
+    private void applyFilter(String q) {
+        String s = q == null ? "" : q.trim().toUpperCase();
+        viewPairs.clear();
+        for (String p : pairs) {
+            if (s.isEmpty() || p.toUpperCase().contains(s)) {
+                viewPairs.add(p);
+            }
+        }
+        rebuildWatchlist();
     }
 
     private void setupWatchlist() {
@@ -221,7 +297,7 @@ public class MainActivity extends Activity {
                 if (remotePairs != null && !remotePairs.isEmpty()) {
                     pairs.clear();
                     pairs.addAll(remotePairs);
-                    rebuildWatchlist();
+                    applyFilter(searchText.getText().toString());
                     connText.setText("data: " + remotePairs.size() + " pair");
                 }
             }
@@ -278,13 +354,66 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(android.view.KeyEvent event) {
-        if (event.getAction() == android.view.KeyEvent.ACTION_DOWN
-                && event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK
-                && chart.isFocused()) {
-            pairButton.requestFocus();
-            return true;
+        if (event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+            int kc = event.getKeyCode();
+            boolean typing = searchText != null && searchText.hasFocus();
+
+            if (kc == android.view.KeyEvent.KEYCODE_BACK && chart.isFocused()) {
+                pairButton.requestFocus();
+                return true;
+            }
+            if (kc == android.view.KeyEvent.KEYCODE_ESCAPE) {
+                onBackPressed();
+                return true;
+            }
+            if (!typing) {
+                switch (kc) {
+                    case android.view.KeyEvent.KEYCODE_PLUS:
+                    case android.view.KeyEvent.KEYCODE_EQUALS:
+                    case android.view.KeyEvent.KEYCODE_NUMPAD_ADD:
+                        chart.zoomIn();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_MINUS:
+                    case android.view.KeyEvent.KEYCODE_NUMPAD_SUBTRACT:
+                        chart.zoomOut();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_M:
+                        chart.cycleOverlay();
+                        syncIndicatorLabels();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_V:
+                        chart.cycleSub();
+                        syncIndicatorLabels();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_P:
+                        showPairDialog();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_U:
+                        updateButton.performClick();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_S:
+                    case android.view.KeyEvent.KEYCODE_SLASH:
+                        searchText.requestFocus();
+                        return true;
+                    case android.view.KeyEvent.KEYCODE_1:
+                    case android.view.KeyEvent.KEYCODE_2:
+                    case android.view.KeyEvent.KEYCODE_3:
+                    case android.view.KeyEvent.KEYCODE_4:
+                    case android.view.KeyEvent.KEYCODE_5:
+                    case android.view.KeyEvent.KEYCODE_6:
+                        setIntervalIndex(kc - android.view.KeyEvent.KEYCODE_1);
+                        return true;
+                }
+            }
         }
         return super.dispatchKeyEvent(event);
+    }
+
+    private void setIntervalIndex(int idx) {
+        if (idx < 0 || idx >= INTERVALS.length) return;
+        currentInterval = INTERVALS[idx];
+        refreshButtonStates();
+        loadKlines();
     }
 
     private void setupIntervalButtons() {
@@ -363,7 +492,7 @@ public class MainActivity extends Activity {
                     final List<Kline> klines;
                     final String source;
                     if (YahooApi.isYahoo(symbol)) {
-                        klines = YahooApi.getKlines(symbol, interval);
+                        klines = fetchYahooKlines(symbol, interval);
                         source = YahooApi.isMetal(symbol) ? "Yahoo metal" : "Yahoo forex";
                     } else {
                         klines = BinanceApi.getKlines(symbol, interval, 200);
@@ -407,9 +536,7 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    final Ticker t = YahooApi.isYahoo(symbol)
-                            ? YahooApi.getQuote(symbol)
-                            : BinanceApi.get24h(symbol);
+                    final Ticker t = fetchTicker(symbol);
                     Cache.putTicker(symbol, t);
                     handler.post(new Runnable() {
                         @Override
@@ -446,35 +573,65 @@ public class MainActivity extends Activity {
         executor.execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    List<String> crypto = new ArrayList<String>();
-                    List<String> fx = new ArrayList<String>();
-                    for (String p : pairs) {
-                        if (YahooApi.isYahoo(p)) fx.add(p);
-                        else crypto.add(p);
-                    }
-                    if (!crypto.isEmpty()) {
+                List<String> crypto = new ArrayList<String>();
+                List<String> fx = new ArrayList<String>();
+                for (String p : pairs) {
+                    if (YahooApi.isYahoo(p)) fx.add(p);
+                    else crypto.add(p);
+                }
+                if (!crypto.isEmpty()) {
+                    try {
                         Map<String, Ticker> m = BinanceApi.getQuoteBatch(crypto);
                         for (Map.Entry<String, Ticker> e : m.entrySet()) {
                             Cache.putTicker(e.getKey(), e.getValue());
                         }
+                    } catch (Exception ignored) {
                     }
-                    if (!fx.isEmpty()) {
+                }
+                if (!fx.isEmpty()) {
+                    try {
                         Map<String, Ticker> m = YahooApi.getSparkQuotes(fx);
                         for (Map.Entry<String, Ticker> e : m.entrySet()) {
                             Cache.putTicker(e.getKey(), e.getValue());
                         }
+                    } catch (Exception ignored) {
                     }
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            refreshWatchlistData();
-                        }
-                    });
-                } catch (Exception ignored) {
                 }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        refreshWatchlistData();
+                    }
+                });
             }
         });
+    }
+
+    private static final String GOLD_FALLBACK = "XAUTUSDT";
+
+    private List<Kline> fetchYahooKlines(String symbol, String interval) throws Exception {
+        try {
+            return YahooApi.getKlines(symbol, interval);
+        } catch (Exception e) {
+            if (symbol.startsWith("XAU/")) {
+                return BinanceApi.getKlines(GOLD_FALLBACK, interval, 200);
+            }
+            throw e;
+        }
+    }
+
+    private Ticker fetchTicker(String symbol) throws Exception {
+        if (!YahooApi.isYahoo(symbol)) {
+            return BinanceApi.get24h(symbol);
+        }
+        try {
+            return YahooApi.getQuote(symbol);
+        } catch (Exception e) {
+            if (symbol.startsWith("XAU/")) {
+                return BinanceApi.get24h(GOLD_FALLBACK);
+            }
+            throw e;
+        }
     }
 
     private void renderTicker(Ticker t) {
@@ -491,6 +648,7 @@ public class MainActivity extends Activity {
 
     private void renderPrice(double price) {
         priceText.setText(currencyPrefix() + formatPrice(price));
+        chart.updateLastPrice(price);
     }
 
     private String currencyPrefix() {
@@ -525,8 +683,16 @@ public class MainActivity extends Activity {
 
     private String shortErr(String msg) {
         if (msg == null) return "unknown";
-        if (msg.length() > 80) return msg.substring(0, 80);
-        return msg;
+        String m = msg;
+        if (m.contains("Unable to resolve host") || m.contains("UnknownHost")
+                || m.contains("No address associated")) {
+            return "DNS/jaringan bermasalah — mencoba lagi otomatis";
+        }
+        if (m.toLowerCase().contains("timed out") || m.toLowerCase().contains("timeout")) {
+            return "koneksi lambat (timeout) — mencoba lagi";
+        }
+        if (m.length() > 80) m = m.substring(0, 80);
+        return m;
     }
 
     private void updateConn(String msg) {
@@ -539,6 +705,7 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(klinesTask);
         handler.removeCallbacks(tickerTask);
         handler.removeCallbacks(marketTask);
+        handler.removeCallbacks(clockTask);
         executor.shutdownNow();
     }
 }

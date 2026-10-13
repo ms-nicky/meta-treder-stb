@@ -70,6 +70,19 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
+            <TextView
+                android:id="@+id/tv_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="--:--:-- WIB"
+                android:textColor="#F0B90B"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="14dp"
+                android:layout_height="1dp" />
+
             <Button
                 android:id="@+id/btn_update"
                 android:layout_width="wrap_content"
@@ -234,17 +247,44 @@
             android:layout_width="8dp"
             android:layout_height="1dp" />
 
-        <com.stb.markettrader.WatchlistView
-            android:id="@+id/watchlist"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@drawable/bg_card"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:nextFocusLeft="@id/chart"
-            android:nextFocusUp="@id/btn_update"
-            android:nextFocusDown="@id/btn_pair" />
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/search"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:layout_marginBottom="6dp"
+                android:background="@drawable/bg_search"
+                android:hint="Cari pair... (mis. BTC, EUR, XAU)"
+                android:textColorHint="#5B6574"
+                android:textColor="#F2F5FA"
+                android:textSize="18sp"
+                android:singleLine="true"
+                android:inputType="textVisiblePassword"
+                android:imeOptions="actionSearch"
+                android:paddingLeft="14dp"
+                android:paddingRight="14dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusLeft="@id/chart"
+                android:nextFocusDown="@id/watchlist" />
+
+            <com.stb.markettrader.WatchlistView
+                android:id="@+id/watchlist"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_card"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/search"
+                android:nextFocusLeft="@id/chart"
+                android:nextFocusDown="@id/btn_pair" />
+        </LinearLayout>
     </LinearLayout>
 
     <TextView

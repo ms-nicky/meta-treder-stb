@@ -8,7 +8,27 @@ import java.util.List;
 
 public class YahooApi {
 
-    private static final String BASE = "https://query1.finance.yahoo.com/v8/finance/chart/";
+    private static final String[] HOSTS = {
+            "https://query1.finance.yahoo.com",
+            "https://query2.finance.yahoo.com"
+    };
+
+    private static int lastGoodHost = 0;
+
+    private static String get(String path) throws Exception {
+        Exception last = null;
+        for (int k = 0; k < HOSTS.length; k++) {
+            int idx = (lastGoodHost + k) % HOSTS.length;
+            try {
+                String body = Http.getText(HOSTS[idx] + path);
+                lastGoodHost = idx;
+                return body;
+            } catch (Exception e) {
+                last = e;
+            }
+        }
+        throw last != null ? last : new Exception("Yahoo tidak terjangkau");
+    }
 
     public static boolean isYahoo(String pair) {
         return pair != null && pair.contains("/");
@@ -92,9 +112,9 @@ public class YahooApi {
             if (i > 0) sb.append(",");
             sb.append(java.net.URLEncoder.encode(toYahooSymbol(pairs.get(i)), "UTF-8"));
         }
-        String url = "https://query1.finance.yahoo.com/v8/finance/spark?symbols=" + sb
+        String url = "/v8/finance/spark?symbols=" + sb
                 + "&range=1d&interval=1d";
-        JSONObject root = new JSONObject(Http.getText(url));
+        JSONObject root = new JSONObject(get(url));
         for (String pair : pairs) {
             String sym = toYahooSymbol(pair);
             if (!root.has(sym)) continue;
@@ -128,8 +148,8 @@ public class YahooApi {
 
     private static JSONObject fetchChart(String pair, String interval, String range) throws Exception {
         String sym = toYahooSymbol(pair);
-        String url = BASE + sym + "?interval=" + interval + "&range=" + range;
-        JSONObject root = new JSONObject(Http.getText(url));
+        String path = "/v8/finance/chart/" + sym + "?interval=" + interval + "&range=" + range;
+        JSONObject root = new JSONObject(get(path));
         JSONObject chart = root.getJSONObject("chart");
         if (chart.has("error") && !chart.isNull("error")) {
             throw new Exception("Tidak ada data");

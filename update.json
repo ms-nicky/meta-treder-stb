@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 11,
-    "versionName": "2.0.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.0.0.apk",
-    "apkSha256": "16b806249c9d954816a60a083e0e1d2f34b936e01af91f09e08c7ce4042d9f01",
-    "sizeBytes": 55427,
+    "versionCode": 12,
+    "versionName": "2.1.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.1.0.apk",
+    "apkSha256": "cea84c295a5b547db259be9946858f0fec1fa76505072c3041d88994a4366a87",
+    "sizeBytes": 59667,
     "date": "2026-10-13",
-    "notes": "Tampilan gaya MetaTrader untuk STB!\n\n- Panel MARKET: banyak harga sekaligus (crypto+forex+logam) dengan % perubahan live\n- Pilih pair langsung dari panel (D-pad atas/bawah, OK)\n- Indikator: MA (7/25/99), EMA (9/21), Bollinger Bands\n- Sub-panel: Volume, RSI(14), MACD(12,26,9)\n- Legend nilai indikator di chart\n- Ganti pair kini INSTAN berkat cache (revisit tanpa loading lama)\n- Tombol baru: MA/EMA/BOLL & VOL/RSI/MACD"
+    "notes": "Real-time + jam WIB + dukungan mouse & keyboard!\n\n- Candle terakhir bergerak real-time mengikuti harga live\n- Jam WIB (Asia/Jakarta) di header\n- Kotak pencarian pair (ketik mis. BTC / EUR / XAU)\n- Mouse: scroll = zoom chart, geser+tahan = pan, hover = crosshair\n- Keyboard: 1-6 timeframe, +/- zoom, M overlay, V sub-panel, P pair, U update, S cari, Esc kembali\n- Perbaikan: error 'unable to resolve' (DNS) jauh lebih jarang (keep-alive + retry + failover host)\n- Fallback emas: XAU/USD otomatis pakai Binance XAUT bila Yahoo bermasalah"
   },
   "data": {
     "version": 2,

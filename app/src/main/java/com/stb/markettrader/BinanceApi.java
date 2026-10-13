@@ -3,14 +3,8 @@ package com.stb.markettrader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 
 public class BinanceApi {
 
@@ -40,7 +34,7 @@ public class BinanceApi {
             String host = HOSTS[idx];
             try {
                 String url = host + "/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=" + limit;
-                String json = httpGet(url, true);
+                String json = Http.getText(url);
                 List<Kline> result = parseKlines(json);
                 onSuccess(host, idx);
                 return result;
@@ -57,7 +51,7 @@ public class BinanceApi {
             String host = HOSTS[idx];
             try {
                 String url = host + "/api/v3/ticker/24hr?symbol=" + symbol;
-                String json = httpGet(url, false);
+                String json = Http.getText(url);
                 Ticker t = parseTicker(json);
                 onSuccess(host, idx);
                 return t;
@@ -83,7 +77,7 @@ public class BinanceApi {
             String host = HOSTS[idx];
             try {
                 String url = host + "/api/v3/ticker/24hr?symbols=" + encoded + "&type=MINI";
-                String json = httpGet(url, false);
+                String json = Http.getText(url);
                 JSONArray arr = new JSONArray(json);
                 for (int i = 0; i < arr.length(); i++) {
                     JSONObject o = arr.getJSONObject(i);
@@ -154,48 +148,5 @@ public class BinanceApi {
         t.volume = o.getDouble("volume");
         t.quoteVolume = o.getDouble("quoteVolume");
         return t;
-    }
-
-    private static String httpGet(String urlStr, boolean acceptGzip) throws Exception {
-        HttpURLConnection conn = null;
-        try {
-            URL url = new URL(urlStr);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(15000);
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 4.4) MarketTraderSTB/1.0");
-            conn.setRequestProperty("Accept", "application/json");
-            conn.connect();
-
-            int code = conn.getResponseCode();
-            if (code >= 200 && code < 300) {
-                InputStream in = conn.getInputStream();
-                if (acceptGzip) {
-                    String enc = conn.getContentEncoding();
-                    if (enc != null && enc.toLowerCase().contains("gzip")) {
-                        in = new GZIPInputStream(in);
-                    }
-                }
-                return readStream(in);
-            } else {
-                InputStream es = conn.getErrorStream();
-                String body = es != null ? readStream(es) : "";
-                throw new Exception("HTTP " + code + " " + body);
-            }
-        } finally {
-            if (conn != null) conn.disconnect();
-        }
-    }
-
-    private static String readStream(InputStream in) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        StringBuilder sb = new StringBuilder();
-        char[] buf = new char[8192];
-        int n;
-        while ((n = reader.read(buf)) != -1) {
-            sb.append(buf, 0, n);
-        }
-        reader.close();
-        return sb.toString();
     }
 }

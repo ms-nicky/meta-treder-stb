@@ -214,6 +214,16 @@ public class CandlestickChartView extends View {
         return null;
     }
 
+    public void updateLastPrice(double price) {
+        if (data == null || data.isEmpty() || price <= 0) return;
+        Kline k = data.get(data.size() - 1);
+        k.close = price;
+        if (price > k.high) k.high = price;
+        if (price < k.low || k.low <= 0) k.low = price;
+        computeIndicators();
+        invalidate();
+    }
+
     private float latestOffset() {
         float chartW = getWidth() - rightPadding;
         float content = contentWidth();
@@ -272,6 +282,55 @@ public class CandlestickChartView extends View {
         candleWidth = newW;
         clampOffset();
         invalidate();
+    }
+
+    public void zoomIn() {
+        if (data == null || data.isEmpty()) return;
+        zoom(1.25f);
+    }
+
+    public void zoomOut() {
+        if (data == null || data.isEmpty()) return;
+        zoom(0.8f);
+    }
+
+    public void panLeft() {
+        if (data == null || data.isEmpty()) return;
+        offsetX -= candleWidth * 3f;
+        clampOffset();
+        invalidate();
+    }
+
+    public void panRight() {
+        if (data == null || data.isEmpty()) return;
+        offsetX += candleWidth * 3f;
+        clampOffset();
+        invalidate();
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (data == null || data.isEmpty()) return super.onGenericMotionEvent(event);
+        int action = event.getActionMasked();
+        if (action == MotionEvent.ACTION_SCROLL) {
+            float v = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            if (v > 0) zoomOut();
+            else if (v < 0) zoomIn();
+            return true;
+        }
+        if (action == MotionEvent.ACTION_HOVER_MOVE) {
+            crossX = event.getX();
+            crossY = event.getY();
+            invalidate();
+            return true;
+        }
+        if (action == MotionEvent.ACTION_HOVER_EXIT) {
+            crossX = -1f;
+            crossY = -1f;
+            invalidate();
+            return true;
+        }
+        return super.onGenericMotionEvent(event);
     }
 
     @Override
@@ -606,6 +665,7 @@ public class CandlestickChartView extends View {
 
     private String timeLabel(long openTimeMs) {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.US);
+        sdf.setTimeZone(java.util.TimeZone.getTimeZone("Asia/Jakarta"));
         return sdf.format(new java.util.Date(openTimeMs));
     }
 
