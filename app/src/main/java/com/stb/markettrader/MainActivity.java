@@ -272,6 +272,11 @@ public class MainActivity extends Activity {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
+                            Double last = chart.getLastClose();
+                            if (last != null) {
+                                renderPrice(last);
+                                changeText.setText("--");
+                            }
                             updateConn("ERR: " + shortErr(e.getMessage()));
                         }
                     });
@@ -281,15 +286,19 @@ public class MainActivity extends Activity {
     }
 
     private void renderTicker(Ticker t) {
-        DecimalFormat df = new DecimalFormat("#,##0.00");
-        DecimalFormat raw = new DecimalFormat("0.00000000");
-        if (t.lastPrice >= 1) {
-            priceText.setText("$" + df.format(t.lastPrice));
-        } else {
-            priceText.setText("$" + raw.format(t.lastPrice));
-        }
+        renderPrice(t.lastPrice);
         changeText.setText(formatPct(t.priceChangePercent));
         changeText.setTextColor(t.priceChangePercent >= 0 ? 0xFF0ECB81 : 0xFFF6465D);
+    }
+
+    private void renderPrice(double price) {
+        DecimalFormat df = new DecimalFormat("#,##0.00");
+        DecimalFormat raw = new DecimalFormat("0.00000000");
+        if (price >= 1) {
+            priceText.setText("$" + df.format(price));
+        } else {
+            priceText.setText("$" + raw.format(price));
+        }
     }
 
     private String formatPct(double pct) {

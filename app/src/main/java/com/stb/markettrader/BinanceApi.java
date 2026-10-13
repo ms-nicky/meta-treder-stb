@@ -15,12 +15,14 @@ import java.util.zip.GZIPInputStream;
 public class BinanceApi {
 
     private static final String[] HOSTS = {
-            "https://api.binance.com",
             "https://data-api.binance.vision",
+            "https://api.binance.com",
             "https://api1.binance.com",
             "https://api2.binance.com",
             "https://api3.binance.com"
     };
+
+    private static int lastGoodHostIdx = 0;
 
     public interface HostFoundCallback {
         void onHost(String host);
@@ -34,12 +36,13 @@ public class BinanceApi {
 
     public static List<Kline> getKlines(String symbol, String interval, int limit) throws Exception {
         Exception last = null;
-        for (String host : HOSTS) {
+        for (int idx : hostOrder()) {
+            String host = HOSTS[idx];
             try {
                 String url = host + "/api/v3/klines?symbol=" + symbol + "&interval=" + interval + "&limit=" + limit;
                 String json = httpGet(url, true);
                 List<Kline> result = parseKlines(json);
-                onSuccess(host);
+                onSuccess(host, idx);
                 return result;
             } catch (Exception e) {
                 last = e;
@@ -50,12 +53,13 @@ public class BinanceApi {
 
     public static Ticker get24h(String symbol) throws Exception {
         Exception last = null;
-        for (String host : HOSTS) {
+        for (int idx : hostOrder()) {
+            String host = HOSTS[idx];
             try {
                 String url = host + "/api/v3/ticker/24hr?symbol=" + symbol;
                 String json = httpGet(url, false);
                 Ticker t = parseTicker(json);
-                onSuccess(host);
+                onSuccess(host, idx);
                 return t;
             } catch (Exception e) {
                 last = e;
@@ -64,7 +68,20 @@ public class BinanceApi {
         throw new Exception("Gagal ambil ticker: " + (last != null ? last.getMessage() : "semua host gagal"));
     }
 
-    private static void onSuccess(String host) {
+    private static int[] hostOrder() {
+        int[] order = new int[HOSTS.length];
+        order[0] = lastGoodHostIdx;
+        int j = 1;
+        for (int i = 0; i < HOSTS.length; i++) {
+            if (i != lastGoodHostIdx) {
+                order[j++] = i;
+            }
+        }
+        return order;
+    }
+
+    private static void onSuccess(String host, int idx) {
+        lastGoodHostIdx = idx;
         if (hostCallback != null) {
             hostCallback.onHost(host);
         }

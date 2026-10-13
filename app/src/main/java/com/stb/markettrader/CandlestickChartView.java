@@ -132,6 +132,13 @@ public class CandlestickChartView extends View {
         invalidate();
     }
 
+    public Double getLastClose() {
+        if (data != null && !data.isEmpty()) {
+            return data.get(data.size() - 1).close;
+        }
+        return null;
+    }
+
     private float latestOffset() {
         float chartW = getWidth() - rightPadding;
         float content = contentWidth();

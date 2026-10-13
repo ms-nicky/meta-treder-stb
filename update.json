@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "app": {
-    "versionCode": 7,
-    "versionName": "1.5.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.5.0.apk",
-    "apkSha256": "2f52a7e24867903c3ccf3a6ca4b5b80a0d50b4d0f2a679d307348f18192b3e51",
-    "sizeBytes": 40788,
+    "versionCode": 8,
+    "versionName": "1.5.1",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.5.1.apk",
+    "apkSha256": "705e200dc8be5b7b24f4348b7236965b572144b785f61dbbd9764cc920ba3fa4",
+    "sizeBytes": 41120,
     "date": "2026-10-13",
-    "notes": "Penambahan sistem update dari GitHub.\n\n- Cek pembaruan otomatis (update.json)\n- Daftar pair diambil dari GitHub (data/pairs.json)\n- Unduh & install APK langsung dari aplikasi\n- Tombol UPDATE baru di header"
+    "notes": "Perbaikan koneksi Binance.\n\n- Host data-api.binance.vision diprioritaskan (jarang terblokir)\n- Host sukses terakhir diapakai duluan di siklus berikutnya\n- Harga tetap tampil dari candle terakhir bila ticker gagal\n- Error menampilkan penyebab & host"
   },
   "data": {
     "version": 1,
