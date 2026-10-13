@@ -35,6 +35,9 @@ public class MainActivity extends Activity {
     private TextView priceText;
     private TextView changeText;
     private TextView connText;
+    private Button updateButton;
+
+    private List<String> pairs = new ArrayList<String>();
 
     private String currentPair = "BTCUSDT";
     private String currentInterval = "1m";
@@ -70,9 +73,13 @@ public class MainActivity extends Activity {
         changeText = findViewById(R.id.change);
         connText = findViewById(R.id.conn);
         pairButton = findViewById(R.id.btn_pair);
+        updateButton = findViewById(R.id.btn_update);
+
+        pairs.addAll(java.util.Arrays.asList(PAIRS));
 
         setupIntervalButtons();
         setupPairButton();
+        setupUpdateButton();
 
         symbolText.setText(currentPair);
         refreshButtonStates();
@@ -82,6 +89,70 @@ public class MainActivity extends Activity {
 
         handler.post(klinesTask);
         handler.post(tickerTask);
+
+        loadRemotePairs();
+        checkForAppUpdate(false);
+    }
+
+    private void loadRemotePairs() {
+        UpdateManager.loadRemotePairs(this, new UpdateManager.PairCallback() {
+            @Override
+            public void onPairs(List<String> remotePairs) {
+                if (remotePairs != null && !remotePairs.isEmpty()) {
+                    pairs.clear();
+                    pairs.addAll(remotePairs);
+                    connText.setText("data: " + remotePairs.size() + " pair");
+                }
+            }
+        });
+    }
+
+    private void checkForAppUpdate(final boolean manual) {
+        if (manual) {
+            connText.setText("memeriksa update...");
+        }
+        UpdateManager.checkForAppUpdate(this, new UpdateManager.UpdateCallback() {
+            @Override
+            public void onUpdate(final UpdateManager.UpdateInfo info) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showUpdateDialog(info);
+                    }
+                });
+            }
+
+            @Override
+            public void onResult(final String message) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateButton.setEnabled(true);
+                        if (manual) {
+                            android.widget.Toast.makeText(MainActivity.this, message,
+                                    android.widget.Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void showUpdateDialog(UpdateManager.UpdateInfo info) {
+        updateButton.setEnabled(true);
+        new AlertDialog.Builder(this)
+                .setTitle("Pembaruan Tersedia v" + info.versionName)
+                .setMessage(info.notes)
+                .setPositiveButton("Unduh & Install", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        android.widget.Toast.makeText(MainActivity.this,
+                                "Mengunduh pembaruan...", android.widget.Toast.LENGTH_SHORT).show();
+                        UpdateManager.downloadAndInstall(MainActivity.this, info);
+                    }
+                })
+                .setNegativeButton("Nanti", null)
+                .show();
     }
 
     @Override
@@ -121,13 +192,24 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void setupUpdateButton() {
+        updateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                v.setEnabled(false);
+                checkForAppUpdate(true);
+            }
+        });
+    }
+
     private void showPairDialog() {
+        String[] items = pairs.toArray(new String[pairs.size()]);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Pilih Pair");
-        builder.setItems(PAIRS, new android.content.DialogInterface.OnClickListener() {
+        builder.setItems(items, new android.content.DialogInterface.OnClickListener() {
             @Override
             public void onClick(android.content.DialogInterface dialog, int which) {
-                currentPair = PAIRS[which];
+                currentPair = pairs.get(which);
                 symbolText.setText(currentPair);
                 loadKlines();
                 loadTicker();

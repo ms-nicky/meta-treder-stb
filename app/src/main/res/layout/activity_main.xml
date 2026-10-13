@@ -65,6 +65,25 @@
             android:layout_height="1dp"
             android:layout_weight="1" />
 
+        <Button
+            android:id="@+id/btn_update"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:minWidth="130dp"
+            android:text=" UPDATE "
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/btn_pair_text"
+            android:background="@drawable/btn_update"
+            android:focusable="true"
+            android:stateListAnimator="@null"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp" />
+
+        <View
+            android:layout_width="10dp"
+            android:layout_height="1dp" />
+
         <TextView
             android:id="@+id/conn"
             android:layout_width="wrap_content"

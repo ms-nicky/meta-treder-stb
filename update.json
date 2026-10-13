@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "app": {
+    "versionCode": 7,
+    "versionName": "1.5.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.5.0.apk",
+    "apkSha256": "2f52a7e24867903c3ccf3a6ca4b5b80a0d50b4d0f2a679d307348f18192b3e51",
+    "sizeBytes": 40788,
+    "date": "2026-10-13",
+    "notes": "Penambahan sistem update dari GitHub.\n\n- Cek pembaruan otomatis (update.json)\n- Daftar pair diambil dari GitHub (data/pairs.json)\n- Unduh & install APK langsung dari aplikasi\n- Tombol UPDATE baru di header"
+  },
+  "data": {
+    "version": 1,
+    "pairsUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/data/pairs.json",
+    "pairsSha256": "f7dfb6484be592906a898e05ec21ae3a3137863f6c37e1788deafd39c503fd05"
+  }
+}
