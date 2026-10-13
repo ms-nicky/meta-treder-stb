@@ -20,7 +20,9 @@ public class MainActivity extends Activity {
     private static final String[] PAIRS = {
             "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
             "DOGEUSDT", "TRXUSDT", "LTCUSDT", "DOTUSDT", "LINKUSDT", "AVAXUSDT",
-            "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT"
+            "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT",
+            "PAXGUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT", "UNIUSDT",
+            "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
     };
 
     private static final String[] INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"};
