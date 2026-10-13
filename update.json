@@ -1,17 +1,17 @@
 {
   "schema": 1,
   "app": {
-    "versionCode": 8,
-    "versionName": "1.5.1",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.5.1.apk",
-    "apkSha256": "705e200dc8be5b7b24f4348b7236965b572144b785f61dbbd9764cc920ba3fa4",
-    "sizeBytes": 41120,
+    "versionCode": 9,
+    "versionName": "1.6.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.6.0.apk",
+    "apkSha256": "441d2aeba483303dbda84c154a4dddf31b9ff26df46fef1917b2c4e72866c140",
+    "sizeBytes": 42243,
     "date": "2026-10-13",
-    "notes": "Perbaikan koneksi Binance.\n\n- Host data-api.binance.vision diprioritaskan (jarang terblokir)\n- Host sukses terakhir diapakai duluan di siklus berikutnya\n- Harga tetap tampil dari candle terakhir bila ticker gagal\n- Error menampilkan penyebab & host"
+    "notes": "Angka harga lengkap + gold (XAUT).\n\n- Baris statistik 24 jam: High, Low, Volume, Volume USDT\n- Format volume ringkas (K/M/B)\n- Pair baru XAUTUSDT (Tether Gold / harga emas)"
   },
   "data": {
     "version": 1,
     "pairsUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/data/pairs.json",
-    "pairsSha256": "f7dfb6484be592906a898e05ec21ae3a3137863f6c37e1788deafd39c503fd05"
+    "pairsSha256": "03efbfccceb93a8d78b82e7cd0eb04408b0c6e02bcbf39e27bb051821f41e73e"
   }
 }

@@ -21,8 +21,8 @@ public class MainActivity extends Activity {
             "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
             "DOGEUSDT", "TRXUSDT", "LTCUSDT", "DOTUSDT", "LINKUSDT", "AVAXUSDT",
             "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT",
-            "PAXGUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT", "UNIUSDT",
-            "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
+            "PAXGUSDT", "XAUTUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT",
+            "UNIUSDT", "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
     };
 
     private static final String[] INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"};
@@ -36,6 +36,10 @@ public class MainActivity extends Activity {
     private TextView changeText;
     private TextView connText;
     private Button updateButton;
+    private TextView statHigh;
+    private TextView statLow;
+    private TextView statVol;
+    private TextView statQVol;
 
     private List<String> pairs = new ArrayList<String>();
 
@@ -74,6 +78,10 @@ public class MainActivity extends Activity {
         connText = findViewById(R.id.conn);
         pairButton = findViewById(R.id.btn_pair);
         updateButton = findViewById(R.id.btn_update);
+        statHigh = findViewById(R.id.tv_high);
+        statLow = findViewById(R.id.tv_low);
+        statVol = findViewById(R.id.tv_vol);
+        statQVol = findViewById(R.id.tv_qvol);
 
         pairs.addAll(java.util.Arrays.asList(PAIRS));
 
@@ -289,16 +297,33 @@ public class MainActivity extends Activity {
         renderPrice(t.lastPrice);
         changeText.setText(formatPct(t.priceChangePercent));
         changeText.setTextColor(t.priceChangePercent >= 0 ? 0xFF0ECB81 : 0xFFF6465D);
+        statHigh.setText("$" + formatPrice(t.highPrice));
+        statLow.setText("$" + formatPrice(t.lowPrice));
+        statVol.setText(formatCompact(t.volume) + " " + symbolUnit());
+        statQVol.setText("$" + formatCompact(t.quoteVolume));
     }
 
     private void renderPrice(double price) {
+        priceText.setText("$" + formatPrice(price));
+    }
+
+    private String formatPrice(double price) {
         DecimalFormat df = new DecimalFormat("#,##0.00");
         DecimalFormat raw = new DecimalFormat("0.00000000");
-        if (price >= 1) {
-            priceText.setText("$" + df.format(price));
-        } else {
-            priceText.setText("$" + raw.format(price));
-        }
+        return price >= 1 ? df.format(price) : raw.format(price);
+    }
+
+    private String formatCompact(double v) {
+        if (v >= 1_000_000_000d) return String.format(java.util.Locale.US, "%.2fB", v / 1_000_000_000d);
+        if (v >= 1_000_000d) return String.format(java.util.Locale.US, "%.2fM", v / 1_000_000d);
+        if (v >= 1_000d) return String.format(java.util.Locale.US, "%.2fK", v / 1_000d);
+        return String.format(java.util.Locale.US, "%.2f", v);
+    }
+
+    private String symbolUnit() {
+        String p = currentPair;
+        if (p.endsWith("USDT")) return p.substring(0, p.length() - 4);
+        return p;
     }
 
     private String formatPct(double pct) {
