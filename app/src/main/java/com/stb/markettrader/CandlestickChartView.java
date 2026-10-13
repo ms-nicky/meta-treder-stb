@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.AttributeSet;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -34,6 +35,7 @@ public class CandlestickChartView extends View {
 
     private float candleWidth = 10f;
     private float offsetX = 0f;
+    private float defaultCandleWidth = 0f;
 
     private float lastDownX;
     private float lastDownY;
@@ -117,15 +119,25 @@ public class CandlestickChartView extends View {
         this.data = klines;
         if (klines != null && !klines.isEmpty() && klines.size() > 5) {
             float w = getWidth() > 0 ? getWidth() : 1000f;
-            candleWidth = w / 90f;
+            defaultCandleWidth = w / 90f;
+            candleWidth = defaultCandleWidth;
         }
         resetView();
         invalidate();
     }
 
     public void resetView() {
-        offsetX = 0f;
+        if (defaultCandleWidth > 0) candleWidth = defaultCandleWidth;
+        offsetX = latestOffset();
         invalidate();
+    }
+
+    private float latestOffset() {
+        float chartW = getWidth() - rightPadding;
+        float content = contentWidth();
+        float off = chartW - content;
+        if (off > chartW * 0.1f) off = chartW * 0.1f;
+        return off;
     }
 
     private float contentWidth() {
@@ -135,11 +147,54 @@ public class CandlestickChartView extends View {
 
     private void clampOffset() {
         float chartW = getWidth() - rightPadding;
-        float content = contentWidth();
-        float maxOffset = chartW - content;
-        float minOffset = 40f;
-        if (offsetX < maxOffset) offsetX = maxOffset;
-        if (offsetX > minOffset) offsetX = minOffset;
+        float lo = chartW - contentWidth();
+        if (lo > chartW * 0.1f) lo = chartW * 0.1f;
+        float hi = chartW * 0.4f;
+        if (offsetX < lo) offsetX = lo;
+        if (offsetX > hi) offsetX = hi;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (data == null || data.isEmpty()) {
+            return super.onKeyDown(keyCode, event);
+        }
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+                offsetX -= candleWidth * 3f;
+                clampOffset();
+                invalidate();
+                return true;
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+                offsetX += candleWidth * 3f;
+                clampOffset();
+                invalidate();
+                return true;
+            case KeyEvent.KEYCODE_DPAD_UP:
+                zoom(1.25f);
+                return true;
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                zoom(0.8f);
+                return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                resetView();
+                return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private void zoom(float factor) {
+        float newW = clamp(candleWidth * factor, 3f, 80f);
+        candleWidth = newW;
+        clampOffset();
+        invalidate();
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        return true;
     }
 
     @Override

@@ -85,8 +85,23 @@
             android:id="@+id/chart"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_margin="6dp" />
+            android:layout_margin="6dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/btn_pair"
+            android:nextFocusLeft="@id/btn_pair"
+            android:nextFocusRight="@id/btn_pair" />
     </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="◄ ► GESER    ▲ ▼ ZOOM    OK RESET    BACK ke MENU"
+        android:textColor="#5B6574"
+        android:textSize="17sp"
+        android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -107,6 +122,7 @@
             android:textColor="@color/btn_pair_text"
             android:background="@drawable/btn_pair"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:paddingLeft="20dp"
             android:paddingRight="20dp" />
@@ -126,6 +142,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />
@@ -141,6 +158,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />
@@ -156,6 +174,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />
@@ -171,6 +190,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />
@@ -186,6 +206,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />
@@ -201,6 +222,7 @@
             android:textColor="@color/tf_text"
             android:background="@drawable/btn_tf"
             android:focusable="true"
+            android:nextFocusUp="@id/chart"
             android:stateListAnimator="@null"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp" />

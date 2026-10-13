@@ -77,8 +77,22 @@ public class MainActivity extends Activity {
         symbolText.setText(currentPair);
         refreshButtonStates();
 
+        chart.setFocusable(true);
+        chart.requestFocus();
+
         handler.post(klinesTask);
         handler.post(tickerTask);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (event.getAction() == android.view.KeyEvent.ACTION_DOWN
+                && event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK
+                && chart.isFocused()) {
+            pairButton.requestFocus();
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     private void setupIntervalButtons() {
