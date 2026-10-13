@@ -12,6 +12,7 @@ import android.widget.TextView;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,6 +42,7 @@ public class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     private CandlestickChartView chart;
+    private WatchlistView watchlist;
     private TextView symbolText;
     private TextView priceText;
     private TextView changeText;
@@ -50,11 +52,14 @@ public class MainActivity extends Activity {
     private TextView statLow;
     private TextView statVol;
     private TextView statQVol;
+    private Button btnInd;
+    private Button btnSub;
 
     private List<String> pairs = new ArrayList<String>();
 
     private String currentPair = "BTCUSDT";
     private String currentInterval = "1m";
+    private String lastRenderedKey = "";
 
     private Button pairButton;
     private final List<Button> tfButtons = new ArrayList<Button>();
@@ -75,6 +80,14 @@ public class MainActivity extends Activity {
         }
     };
 
+    private final Runnable marketTask = new Runnable() {
+        @Override
+        public void run() {
+            loadMarket();
+            handler.postDelayed(this, 12000);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,12 +95,15 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         chart = findViewById(R.id.chart);
+        watchlist = findViewById(R.id.watchlist);
         symbolText = findViewById(R.id.symbol);
         priceText = findViewById(R.id.price);
         changeText = findViewById(R.id.change);
         connText = findViewById(R.id.conn);
         pairButton = findViewById(R.id.btn_pair);
         updateButton = findViewById(R.id.btn_update);
+        btnInd = findViewById(R.id.btn_ind);
+        btnSub = findViewById(R.id.btn_sub);
         statHigh = findViewById(R.id.tv_high);
         statLow = findViewById(R.id.tv_low);
         statVol = findViewById(R.id.tv_vol);
@@ -97,21 +113,105 @@ public class MainActivity extends Activity {
         pairs.addAll(java.util.Arrays.asList(FOREX_PAIRS));
         pairs.addAll(java.util.Arrays.asList(METAL_PAIRS));
 
+        rebuildWatchlist();
         setupIntervalButtons();
         setupPairButton();
         setupUpdateButton();
+        setupIndicatorButtons();
+        setupWatchlist();
 
         symbolText.setText(currentPair);
         refreshButtonStates();
+        syncIndicatorLabels();
 
         chart.setFocusable(true);
         chart.requestFocus();
 
         handler.post(klinesTask);
         handler.post(tickerTask);
+        handler.postDelayed(marketTask, 1500);
 
         loadRemotePairs();
         checkForAppUpdate(false);
+    }
+
+    private void rebuildWatchlist() {
+        List<WatchlistView.Item> items = new ArrayList<WatchlistView.Item>();
+        for (String p : pairs) {
+            WatchlistView.Item it = new WatchlistView.Item(p);
+            Ticker t = Cache.getTicker(p);
+            if (t != null) {
+                it.price = t.lastPrice;
+                it.changePct = t.priceChangePercent;
+                it.hasData = true;
+            }
+            items.add(it);
+        }
+        watchlist.setItems(items);
+        watchlist.setSelectedPair(currentPair);
+    }
+
+    private void refreshWatchlistData() {
+        List<WatchlistView.Item> items = new ArrayList<WatchlistView.Item>();
+        for (String p : pairs) {
+            WatchlistView.Item it = new WatchlistView.Item(p);
+            Ticker t = Cache.getTicker(p);
+            if (t != null) {
+                it.price = t.lastPrice;
+                it.changePct = t.priceChangePercent;
+                it.hasData = true;
+            }
+            items.add(it);
+        }
+        watchlist.setItems(items);
+    }
+
+    private void setupWatchlist() {
+        watchlist.setOnSelectListener(new WatchlistView.OnSelectListener() {
+            @Override
+            public void onSelect(String pair) {
+                switchPair(pair);
+            }
+        });
+    }
+
+    private void setupIndicatorButtons() {
+        btnInd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chart.cycleOverlay();
+                syncIndicatorLabels();
+            }
+        });
+        btnSub.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chart.cycleSub();
+                syncIndicatorLabels();
+            }
+        });
+    }
+
+    private void syncIndicatorLabels() {
+        switch (chart.getOverlayType()) {
+            case CandlestickChartView.OVERLAY_MA: btnInd.setText("MA"); break;
+            case CandlestickChartView.OVERLAY_EMA: btnInd.setText("EMA"); break;
+            case CandlestickChartView.OVERLAY_BOLL: btnInd.setText("BOLL"); break;
+            default: btnInd.setText("IND OFF"); break;
+        }
+        switch (chart.getSubType()) {
+            case CandlestickChartView.SUB_RSI: btnSub.setText("RSI"); break;
+            case CandlestickChartView.SUB_MACD: btnSub.setText("MACD"); break;
+            default: btnSub.setText("VOL"); break;
+        }
+    }
+
+    private void switchPair(String pair) {
+        currentPair = pair;
+        symbolText.setText(pair);
+        watchlist.setSelectedPair(pair);
+        loadKlines();
+        loadTicker();
     }
 
     private void loadRemotePairs() {
@@ -121,6 +221,7 @@ public class MainActivity extends Activity {
                 if (remotePairs != null && !remotePairs.isEmpty()) {
                     pairs.clear();
                     pairs.addAll(remotePairs);
+                    rebuildWatchlist();
                     connText.setText("data: " + remotePairs.size() + " pair");
                 }
             }
@@ -229,10 +330,7 @@ public class MainActivity extends Activity {
         builder.setItems(items, new android.content.DialogInterface.OnClickListener() {
             @Override
             public void onClick(android.content.DialogInterface dialog, int which) {
-                currentPair = pairs.get(which);
-                symbolText.setText(currentPair);
-                loadKlines();
-                loadTicker();
+                switchPair(pairs.get(which));
             }
         });
         builder.show();
@@ -250,22 +348,34 @@ public class MainActivity extends Activity {
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                final List<Kline> cached = Cache.getKlines(symbol, interval);
+                if (cached != null) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (symbol.equals(currentPair) && interval.equals(currentInterval)) {
+                                applyKlines(symbol, interval, cached, "cache");
+                            }
+                        }
+                    });
+                }
                 try {
                     final List<Kline> klines;
                     final String source;
                     if (YahooApi.isYahoo(symbol)) {
                         klines = YahooApi.getKlines(symbol, interval);
-                        source = YahooApi.isMetal(symbol) ? "OK Yahoo (metal)" : "OK Yahoo (forex)";
+                        source = YahooApi.isMetal(symbol) ? "Yahoo metal" : "Yahoo forex";
                     } else {
                         klines = BinanceApi.getKlines(symbol, interval, 200);
-                        source = "OK Binance";
+                        source = "Binance";
                     }
+                    Cache.putKlines(symbol, interval, klines);
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (symbol.equals(currentPair) && interval.equals(currentInterval)) {
-                                chart.setKlines(klines);
-                                updateConn(source + " • " + klines.size() + " candle");
+                                applyKlines(symbol, interval, klines,
+                                        source + " • " + klines.size() + " candle");
                             }
                         }
                     });
@@ -273,12 +383,22 @@ public class MainActivity extends Activity {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            updateConn("ERR: " + shortErr(e.getMessage()));
+                            if (cached == null) {
+                                updateConn("ERR: " + shortErr(e.getMessage()));
+                            }
                         }
                     });
                 }
             }
         });
+    }
+
+    private void applyKlines(String symbol, String interval, List<Kline> klines, String status) {
+        String key = symbol + "|" + interval;
+        boolean reset = !key.equals(lastRenderedKey);
+        lastRenderedKey = key;
+        chart.setKlines(klines, reset);
+        updateConn(status);
     }
 
     private void loadTicker() {
@@ -290,6 +410,7 @@ public class MainActivity extends Activity {
                     final Ticker t = YahooApi.isYahoo(symbol)
                             ? YahooApi.getQuote(symbol)
                             : BinanceApi.get24h(symbol);
+                    Cache.putTicker(symbol, t);
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -299,17 +420,58 @@ public class MainActivity extends Activity {
                         }
                     });
                 } catch (final Exception e) {
+                    final Ticker cached = Cache.getTicker(symbol);
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Double last = chart.getLastClose();
-                            if (last != null) {
-                                renderPrice(last);
-                                changeText.setText("--");
+                            if (!symbol.equals(currentPair)) return;
+                            if (cached != null) {
+                                renderTicker(cached);
+                            } else {
+                                Double last = chart.getLastClose();
+                                if (last != null) {
+                                    renderPrice(last);
+                                    changeText.setText("--");
+                                }
+                                updateConn("ERR: " + shortErr(e.getMessage()));
                             }
-                            updateConn("ERR: " + shortErr(e.getMessage()));
                         }
                     });
+                }
+            }
+        });
+    }
+
+    private void loadMarket() {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    List<String> crypto = new ArrayList<String>();
+                    List<String> fx = new ArrayList<String>();
+                    for (String p : pairs) {
+                        if (YahooApi.isYahoo(p)) fx.add(p);
+                        else crypto.add(p);
+                    }
+                    if (!crypto.isEmpty()) {
+                        Map<String, Ticker> m = BinanceApi.getQuoteBatch(crypto);
+                        for (Map.Entry<String, Ticker> e : m.entrySet()) {
+                            Cache.putTicker(e.getKey(), e.getValue());
+                        }
+                    }
+                    if (!fx.isEmpty()) {
+                        Map<String, Ticker> m = YahooApi.getSparkQuotes(fx);
+                        for (Map.Entry<String, Ticker> e : m.entrySet()) {
+                            Cache.putTicker(e.getKey(), e.getValue());
+                        }
+                    }
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            refreshWatchlistData();
+                        }
+                    });
+                } catch (Exception ignored) {
                 }
             }
         });
@@ -319,11 +481,12 @@ public class MainActivity extends Activity {
         renderPrice(t.lastPrice);
         changeText.setText(formatPct(t.priceChangePercent));
         changeText.setTextColor(t.priceChangePercent >= 0 ? 0xFF0ECB81 : 0xFFF6465D);
+        boolean yahoo = YahooApi.isYahoo(currentPair);
         String unit = currencyPrefix();
         statHigh.setText(unit + formatPrice(t.highPrice));
         statLow.setText(unit + formatPrice(t.lowPrice));
-        statVol.setText(t.volume > 0 ? formatCompact(t.volume) + " " + symbolUnit() : "--");
-        statQVol.setText(t.quoteVolume > 0 ? "$" + formatCompact(t.quoteVolume) : "--");
+        statVol.setText(!yahoo && t.volume > 0 ? formatCompact(t.volume) + " " + symbolUnit() : "--");
+        statQVol.setText(!yahoo && t.quoteVolume > 0 ? "$" + formatCompact(t.quoteVolume) : "--");
     }
 
     private void renderPrice(double price) {
@@ -375,6 +538,7 @@ public class MainActivity extends Activity {
         super.onDestroy();
         handler.removeCallbacks(klinesTask);
         handler.removeCallbacks(tickerTask);
+        handler.removeCallbacks(marketTask);
         executor.shutdownNow();
     }
 }

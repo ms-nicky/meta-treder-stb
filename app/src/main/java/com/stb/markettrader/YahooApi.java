@@ -84,6 +84,48 @@ public class YahooApi {
         return t;
     }
 
+    public static java.util.Map<String, Ticker> getSparkQuotes(List<String> pairs) throws Exception {
+        java.util.Map<String, Ticker> out = new java.util.HashMap<String, Ticker>();
+        if (pairs == null || pairs.isEmpty()) return out;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < pairs.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(java.net.URLEncoder.encode(toYahooSymbol(pairs.get(i)), "UTF-8"));
+        }
+        String url = "https://query1.finance.yahoo.com/v8/finance/spark?symbols=" + sb
+                + "&range=1d&interval=1d";
+        JSONObject root = new JSONObject(Http.getText(url));
+        for (String pair : pairs) {
+            String sym = toYahooSymbol(pair);
+            if (!root.has(sym)) continue;
+            JSONObject o = root.optJSONObject(sym);
+            if (o == null) continue;
+            double price = o.optDouble("fulldayPrice", Double.NaN);
+            if (Double.isNaN(price)) {
+                JSONArray close = o.optJSONArray("close");
+                if (close != null && close.length() > 0 && !close.isNull(close.length() - 1)) {
+                    price = close.getDouble(close.length() - 1);
+                }
+            }
+            if (Double.isNaN(price)) continue;
+            double prev = o.optDouble("chartPreviousClose", Double.NaN);
+            double pct = o.optDouble("fulldayChangePercent", Double.NaN);
+            if (Double.isNaN(pct) && !Double.isNaN(prev) && prev != 0) {
+                pct = ((price - prev) / prev) * 100.0;
+            }
+            Ticker t = new Ticker();
+            t.lastPrice = price;
+            t.highPrice = price;
+            t.lowPrice = price;
+            t.volume = 0;
+            t.quoteVolume = 0;
+            t.priceChangePercent = Double.isNaN(pct) ? 0 : pct;
+            t.priceChange = Double.isNaN(prev) ? 0 : price - prev;
+            out.put(pair, t);
+        }
+        return out;
+    }
+
     private static JSONObject fetchChart(String pair, String interval, String range) throws Exception {
         String sym = toYahooSymbol(pair);
         String url = BASE + sym + "?interval=" + interval + "&range=" + range;

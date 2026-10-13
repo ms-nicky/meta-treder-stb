@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 10,
-    "versionName": "1.7.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v1.7.0.apk",
-    "apkSha256": "c5dcc69f66c916c110ca87b033b0138a61ceeb8c3e308a3b654fe8d5e4cac8d6",
-    "sizeBytes": 44992,
+    "versionCode": 11,
+    "versionName": "2.0.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.0.0.apk",
+    "apkSha256": "16b806249c9d954816a60a083e0e1d2f34b936e01af91f09e08c7ce4042d9f01",
+    "sizeBytes": 55427,
     "date": "2026-10-13",
-    "notes": "Crypto + Forex + Logam dalam satu app!\n\n- Forex (Yahoo Finance): EUR/USD, GBP/USD, USD/JPY, USD/IDR, dll (16 pair)\n- Logam: XAU/USD (Emas), XAG/USD (Perak), XPT/USD (Platina), XPD/USD (Palladium)\n- Crypto tetap dari Binance (termasuk XAUT/PAXG token emas)\n- Chart candle asli + intraday (1m-1d) juga untuk forex & logam\n- Baris statistik 24 jam (High/Low/Volume)"
+    "notes": "Tampilan gaya MetaTrader untuk STB!\n\n- Panel MARKET: banyak harga sekaligus (crypto+forex+logam) dengan % perubahan live\n- Pilih pair langsung dari panel (D-pad atas/bawah, OK)\n- Indikator: MA (7/25/99), EMA (9/21), Bollinger Bands\n- Sub-panel: Volume, RSI(14), MACD(12,26,9)\n- Legend nilai indikator di chart\n- Ganti pair kini INSTAN berkat cache (revisit tanpa loading lama)\n- Tombol baru: MA/EMA/BOLL & VOL/RSI/MACD"
   },
   "data": {
     "version": 2,

@@ -68,6 +68,46 @@ public class BinanceApi {
         throw new Exception("Gagal ambil ticker: " + (last != null ? last.getMessage() : "semua host gagal"));
     }
 
+    public static java.util.Map<String, Ticker> getQuoteBatch(List<String> symbols) throws Exception {
+        java.util.Map<String, Ticker> out = new java.util.HashMap<String, Ticker>();
+        if (symbols == null || symbols.isEmpty()) return out;
+        StringBuilder raw = new StringBuilder("[");
+        for (int i = 0; i < symbols.size(); i++) {
+            if (i > 0) raw.append(",");
+            raw.append("\"").append(symbols.get(i)).append("\"");
+        }
+        raw.append("]");
+        String encoded = java.net.URLEncoder.encode(raw.toString(), "UTF-8");
+        Exception last = null;
+        for (int idx : hostOrder()) {
+            String host = HOSTS[idx];
+            try {
+                String url = host + "/api/v3/ticker/24hr?symbols=" + encoded + "&type=MINI";
+                String json = httpGet(url, false);
+                JSONArray arr = new JSONArray(json);
+                for (int i = 0; i < arr.length(); i++) {
+                    JSONObject o = arr.getJSONObject(i);
+                    String sym = o.getString("symbol");
+                    Ticker t = new Ticker();
+                    t.lastPrice = o.getDouble("lastPrice");
+                    t.highPrice = o.optDouble("highPrice", t.lastPrice);
+                    t.lowPrice = o.optDouble("lowPrice", t.lastPrice);
+                    t.volume = o.optDouble("volume", 0);
+                    t.quoteVolume = o.optDouble("quoteVolume", 0);
+                    double open = o.optDouble("openPrice", t.lastPrice);
+                    t.priceChange = t.lastPrice - open;
+                    t.priceChangePercent = open > 0 ? (t.priceChange / open) * 100.0 : 0;
+                    out.put(sym, t);
+                }
+                onSuccess(host, idx);
+                return out;
+            } catch (Exception e) {
+                last = e;
+            }
+        }
+        throw new Exception("Gagal ambil batch ticker: " + (last != null ? last.getMessage() : "semua host gagal"));
+    }
+
     private static int[] hostOrder() {
         int[] order = new int[HOSTS.length];
         order[0] = lastGoodHostIdx;
