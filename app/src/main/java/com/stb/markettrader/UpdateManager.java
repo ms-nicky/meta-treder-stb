@@ -136,12 +136,19 @@ public class UpdateManager {
 
     private static List<String> parsePairs(String json) throws Exception {
         JSONObject root = new JSONObject(json);
-        JSONArray arr = root.getJSONArray("pairs");
-        List<String> list = new ArrayList<String>(arr.length());
-        for (int i = 0; i < arr.length(); i++) {
-            list.add(arr.getString(i));
-        }
+        List<String> list = new ArrayList<String>();
+        addAll(root.optJSONArray("crypto"), list);
+        addAll(root.optJSONArray("pairs"), list);
+        addAll(root.optJSONArray("forex"), list);
+        addAll(root.optJSONArray("metals"), list);
         return list;
+    }
+
+    private static void addAll(JSONArray arr, List<String> out) throws Exception {
+        if (arr == null) return;
+        for (int i = 0; i < arr.length(); i++) {
+            out.add(arr.getString(i));
+        }
     }
 
     private static int currentVersionCode(Context context) {

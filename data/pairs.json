@@ -1,11 +1,19 @@
 {
-  "version": 1,
+  "version": 2,
   "defaultPair": "BTCUSDT",
-  "pairs": [
+  "crypto": [
     "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
     "DOGEUSDT", "TRXUSDT", "LTCUSDT", "DOTUSDT", "LINKUSDT", "AVAXUSDT",
     "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT",
     "PAXGUSDT", "XAUTUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT",
     "UNIUSDT", "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
+  ],
+  "forex": [
+    "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD",
+    "NZD/USD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "USD/IDR", "USD/SGD",
+    "USD/MYR", "USD/CNY", "USD/THB", "USD/PHP"
+  ],
+  "metals": [
+    "XAU/USD", "XAG/USD", "XPT/USD", "XPD/USD"
   ]
 }

@@ -17,12 +17,22 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
 
-    private static final String[] PAIRS = {
+    private static final String[] CRYPTO_PAIRS = {
             "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
             "DOGEUSDT", "TRXUSDT", "LTCUSDT", "DOTUSDT", "LINKUSDT", "AVAXUSDT",
             "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT",
             "PAXGUSDT", "XAUTUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT",
             "UNIUSDT", "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
+    };
+
+    private static final String[] FOREX_PAIRS = {
+            "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD",
+            "NZD/USD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "USD/IDR", "USD/SGD",
+            "USD/MYR", "USD/CNY", "USD/THB", "USD/PHP"
+    };
+
+    private static final String[] METAL_PAIRS = {
+            "XAU/USD", "XAG/USD", "XPT/USD", "XPD/USD"
     };
 
     private static final String[] INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"};
@@ -83,7 +93,9 @@ public class MainActivity extends Activity {
         statVol = findViewById(R.id.tv_vol);
         statQVol = findViewById(R.id.tv_qvol);
 
-        pairs.addAll(java.util.Arrays.asList(PAIRS));
+        pairs.addAll(java.util.Arrays.asList(CRYPTO_PAIRS));
+        pairs.addAll(java.util.Arrays.asList(FOREX_PAIRS));
+        pairs.addAll(java.util.Arrays.asList(METAL_PAIRS));
 
         setupIntervalButtons();
         setupPairButton();
@@ -239,13 +251,21 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    final List<Kline> klines = BinanceApi.getKlines(symbol, interval, 200);
+                    final List<Kline> klines;
+                    final String source;
+                    if (YahooApi.isYahoo(symbol)) {
+                        klines = YahooApi.getKlines(symbol, interval);
+                        source = YahooApi.isMetal(symbol) ? "OK Yahoo (metal)" : "OK Yahoo (forex)";
+                    } else {
+                        klines = BinanceApi.getKlines(symbol, interval, 200);
+                        source = "OK Binance";
+                    }
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (symbol.equals(currentPair) && interval.equals(currentInterval)) {
                                 chart.setKlines(klines);
-                                updateConn("OK api.binance.com");
+                                updateConn(source + " • " + klines.size() + " candle");
                             }
                         }
                     });
@@ -267,7 +287,9 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 try {
-                    final Ticker t = BinanceApi.get24h(symbol);
+                    final Ticker t = YahooApi.isYahoo(symbol)
+                            ? YahooApi.getQuote(symbol)
+                            : BinanceApi.get24h(symbol);
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -297,20 +319,27 @@ public class MainActivity extends Activity {
         renderPrice(t.lastPrice);
         changeText.setText(formatPct(t.priceChangePercent));
         changeText.setTextColor(t.priceChangePercent >= 0 ? 0xFF0ECB81 : 0xFFF6465D);
-        statHigh.setText("$" + formatPrice(t.highPrice));
-        statLow.setText("$" + formatPrice(t.lowPrice));
-        statVol.setText(formatCompact(t.volume) + " " + symbolUnit());
-        statQVol.setText("$" + formatCompact(t.quoteVolume));
+        String unit = currencyPrefix();
+        statHigh.setText(unit + formatPrice(t.highPrice));
+        statLow.setText(unit + formatPrice(t.lowPrice));
+        statVol.setText(t.volume > 0 ? formatCompact(t.volume) + " " + symbolUnit() : "--");
+        statQVol.setText(t.quoteVolume > 0 ? "$" + formatCompact(t.quoteVolume) : "--");
     }
 
     private void renderPrice(double price) {
-        priceText.setText("$" + formatPrice(price));
+        priceText.setText(currencyPrefix() + formatPrice(price));
+    }
+
+    private String currencyPrefix() {
+        if (YahooApi.isYahoo(currentPair) && !YahooApi.isMetal(currentPair)) return "";
+        return "$";
     }
 
     private String formatPrice(double price) {
-        DecimalFormat df = new DecimalFormat("#,##0.00");
-        DecimalFormat raw = new DecimalFormat("0.00000000");
-        return price >= 1 ? df.format(price) : raw.format(price);
+        if (price >= 1000) return new DecimalFormat("#,##0.00").format(price);
+        if (price >= 1) return new DecimalFormat("#,##0.0000").format(price);
+        if (price >= 0.01) return new DecimalFormat("#,##0.000000").format(price);
+        return new DecimalFormat("#,##0.00000000").format(price);
     }
 
     private String formatCompact(double v) {
