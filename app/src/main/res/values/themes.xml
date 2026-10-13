@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Holo.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowBackground">#101216</item>
+        <item name="android:colorPrimary">#0ECB81</item>
+        <item name="android:colorAccent">#0ECB81</item>
+    </style>
+</resources>
