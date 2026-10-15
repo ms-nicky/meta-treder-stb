@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 18,
-    "versionName": "2.5.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.5.0.apk",
-    "apkSha256": "ee1eb92842e0c511a0dcd6bfa31acf6e680e8878990c25a5e44deb121df14289",
-    "sizeBytes": 86774,
+    "versionCode": 19,
+    "versionName": "2.5.1",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.5.1.apk",
+    "apkSha256": "f20fc5b41fd870d488d37411fe8517f606338e92ec0c8dc3bb7347f9b60c5988",
+    "sizeBytes": 87104,
     "date": "2026-10-15",
-    "notes": "Trading interaktif penuh dari web terminal broker\n\n- Candle chart kini diambil langsung dari server MT5 (akurat, tanpa Yahoo)\n- Panel akun: Balance, Equity, Floating P/L, Leverage (real-time)\n- Panel TRADE: tombol SELL/BUY, atur volume lot, SL & TP, konfirmasi order\n- Panel POSISI: daftar posisi aktif + P/L berjalan + tombol TUTUP\n- Panel RIWAYAT: daftar transaksi (deals) terakhir\n- Panel DOM: order book / bid-ask-spread\n- Chart menampilkan garis entry/SL/TP dan sinyal MACD BUY/SELL\n- Catatan: order dikirim ke server broker; bila margin kurang, server menolak (lihat pesan status)"
+    "notes": "Perbaikan bug chart: candle hilang saat digeser ke kanan\n\n- Chart tidak lagi blank/candle hilang saat data candle diperbarui (mis. saat sumber data berganti atau jumlah candle berubah)\n- Posisi chart di-clamp ulang otomatis agar candle selalu terlihat\n- Chart otomatis mengikuti candle terbaru bila sedang melihat ujung kanan\n- Ada margin kecil di kanan agar candle terakhir tidak menempel di tepi\n- Termasuk semua fitur v2.5.0: candle dari MT5, panel akun, TRADE, POSISI, RIWAYAT, DOM"
   },
   "data": {
     "version": 2,

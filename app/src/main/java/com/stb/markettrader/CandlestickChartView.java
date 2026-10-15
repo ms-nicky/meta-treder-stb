@@ -76,6 +76,7 @@ public class CandlestickChartView extends View {
     private float candleWidth = 10f;
     private float offsetX = 0f;
     private float defaultCandleWidth = 0f;
+    private boolean followLatest = true;
 
     private float lastDownX;
     private float lastDownY;
@@ -188,6 +189,8 @@ public class CandlestickChartView extends View {
         if (resetView) {
             resetView();
         } else {
+            if (followLatest) offsetX = minOffset();
+            clampOffset();
             invalidate();
         }
     }
@@ -232,7 +235,8 @@ public class CandlestickChartView extends View {
 
     public void resetView() {
         if (defaultCandleWidth > 0) candleWidth = defaultCandleWidth;
-        offsetX = latestOffset();
+        followLatest = true;
+        offsetX = minOffset();
         invalidate();
     }
 
@@ -259,11 +263,7 @@ public class CandlestickChartView extends View {
     }
 
     private float latestOffset() {
-        float chartW = getWidth() - rightPadding;
-        float content = contentWidth();
-        float off = chartW - content;
-        if (off > chartW * 0.1f) off = chartW * 0.1f;
-        return off;
+        return minOffset();
     }
 
     private float contentWidth() {
@@ -271,15 +271,35 @@ public class CandlestickChartView extends View {
         return data.size() * candleWidth;
     }
 
-    private void clampOffset() {
+    private float minOffset() {
         float chartW = getWidth() - rightPadding;
+        if (chartW <= 0f) return 0f;
         float content = contentWidth();
-        float lo = chartW - content;
-        if (lo > chartW * 0.1f) lo = chartW * 0.1f;
-        float hi = 0f;
-        if (hi < lo) hi = lo;
+        if (content <= chartW) return (chartW - content) / 2f;
+        float shift = chartW * 0.06f;
+        return chartW - shift - content;
+    }
+
+    private float maxOffset() {
+        float lo = minOffset();
+        return lo > 0f ? lo : 0f;
+    }
+
+    private void clampOffset() {
+        float lo = minOffset();
+        float hi = maxOffset();
         if (offsetX < lo) offsetX = lo;
         if (offsetX > hi) offsetX = hi;
+        followLatest = offsetX <= lo + candleWidth * 0.5f;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        if (data != null && !data.isEmpty()) {
+            if (followLatest) offsetX = minOffset();
+            clampOffset();
+        }
     }
 
     @Override
@@ -427,6 +447,7 @@ public class CandlestickChartView extends View {
 
         drawGrid(canvas, chartW, priceTop, priceBottom, subTop, subBottom);
 
+        clampOffset();
         PriceRange range = visibleRange();
         if (range == null) return;
         double span = range.max - range.min;
@@ -787,7 +808,13 @@ public class CandlestickChartView extends View {
                 if (!Double.isNaN(boll[2][i])) min = Math.min(min, boll[2][i]);
             }
         }
-        if (!any) return null;
+        if (!any) {
+            for (Kline k : data) {
+                if (k.low < min) min = k.low;
+                if (k.high > max) max = k.high;
+            }
+            if (min > max) return null;
+        }
         double pad = (max - min) * 0.04;
         return new PriceRange(min - pad, max + pad);
     }
