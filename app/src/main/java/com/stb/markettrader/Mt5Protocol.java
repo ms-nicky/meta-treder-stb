@@ -13,6 +13,7 @@ final class Mt5Protocol {
     static final int CMD_BOOTSTRAP = 0;
     static final int CMD_LOGOUT = 2;
     static final int CMD_GET_ACCOUNT = 3;
+    static final int CMD_GET_POSITIONS_ORDERS = 4;
     static final int CMD_GET_SYMBOLS = 6;
     static final int CMD_SUBSCRIBE_TICKS = 7;
     static final int CMD_TICK_PUSH = 8;
@@ -24,6 +25,22 @@ final class Mt5Protocol {
 
     static final int SYMBOL_RECORD_SIZE = 526;
     static final int TICK_RECORD_SIZE = 50;
+    static final int POSITION_RECORD_SIZE = 344;
+    static final int ORDER_RECORD_SIZE = 356;
+
+    static final int POS_SYMBOL_OFF = 24;
+    static final int POS_ACTION_OFF = 88;
+    static final int POS_PRICE_OPEN_OFF = 92;
+    static final int POS_SL_OFF = 108;
+    static final int POS_TP_OFF = 116;
+    static final int POS_VOLUME_OFF = 124;
+    static final int POS_PROFIT_OFF = 132;
+
+    static final int ORD_SYMBOL_OFF = 72;
+    static final int ORD_TYPE_OFF = 148;
+    static final int ORD_PRICE_OFF = 164;
+    static final int ORD_SL_OFF = 188;
+    static final int ORD_TP_OFF = 196;
 
     private static final byte[] IV = new byte[16];
     private static final byte[] INITIAL_KEY =

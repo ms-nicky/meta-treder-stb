@@ -393,12 +393,18 @@ public class MainActivity extends Activity {
                             mt5Connected = connected;
                             if (!connected) lastBrokerMid = 0;
                             refreshBrokerButton();
+                            if (!connected) chart.setTradeLines(null);
                             if (status != null) updateConn(status);
                         }
 
                         @Override
                         public void onTick(double bid, double ask, long timeSec) {
                             onLiveTick(bid, ask);
+                        }
+
+                        @Override
+                        public void onPositions(java.util.List<Mt5Client.TradeLine> lines) {
+                            updateTradeLines(lines);
                         }
                     });
             mt5Client.start();
@@ -426,6 +432,22 @@ public class MainActivity extends Activity {
         lastLiveRender = now;
         renderPrice(mid);
         refreshWatchlistData();
+    }
+
+    private void updateTradeLines(java.util.List<Mt5Client.TradeLine> lines) {
+        java.util.List<CandlestickChartView.TradeLine> out =
+                new java.util.ArrayList<CandlestickChartView.TradeLine>();
+        if (lines != null) {
+            for (Mt5Client.TradeLine t : lines) {
+                out.add(new CandlestickChartView.TradeLine(t.buy, t.pending, t.entry, t.sl, t.tp));
+            }
+        }
+        chart.setTradeLines(out);
+        if (!out.isEmpty()) {
+            Mt5Client.TradeLine t = lines.get(0);
+            updateConn("Posisi: " + (t.buy ? "BUY" : "SELL") + " " + t.entry
+                    + (t.sl > 0 ? "  SL " + t.sl : "") + (t.tp > 0 ? "  TP " + t.tp : ""));
+        }
     }
 
     private void syncIndicatorLabels() {

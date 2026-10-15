@@ -3,6 +3,7 @@ package com.stb.markettrader;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -12,6 +13,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CandlestickChartView extends View {
@@ -50,6 +52,25 @@ public class CandlestickChartView extends View {
     private Paint lastPaint;
     private Paint crossPaint;
     private Paint linePaint;
+    private Paint tradePaint;
+
+    public static class TradeLine {
+        public final boolean buy;
+        public final boolean pending;
+        public final double entry;
+        public final double sl;
+        public final double tp;
+
+        public TradeLine(boolean buy, boolean pending, double entry, double sl, double tp) {
+            this.buy = buy;
+            this.pending = pending;
+            this.entry = entry;
+            this.sl = sl;
+            this.tp = tp;
+        }
+    }
+
+    private List<TradeLine> tradeLines = new ArrayList<TradeLine>();
 
     private float candleWidth = 10f;
     private float offsetX = 0f;
@@ -123,6 +144,10 @@ public class CandlestickChartView extends View {
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeWidth(2f);
+
+        tradePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        tradePaint.setStrokeWidth(1.6f);
+        tradePaint.setStyle(Paint.Style.STROKE);
 
         scaleDetector = new ScaleGestureDetector(getContext(),
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -207,6 +232,11 @@ public class CandlestickChartView extends View {
         invalidate();
     }
 
+    public void setTradeLines(List<TradeLine> lines) {
+        tradeLines = lines != null ? lines : new ArrayList<TradeLine>();
+        invalidate();
+    }
+
     public Double getLastClose() {
         if (data != null && !data.isEmpty()) {
             return data.get(data.size() - 1).close;
@@ -239,9 +269,11 @@ public class CandlestickChartView extends View {
 
     private void clampOffset() {
         float chartW = getWidth() - rightPadding;
-        float lo = chartW - contentWidth();
+        float content = contentWidth();
+        float lo = chartW - content;
         if (lo > chartW * 0.1f) lo = chartW * 0.1f;
-        float hi = chartW * 0.4f;
+        float hi = 0f;
+        if (hi < lo) hi = lo;
         if (offsetX < lo) offsetX = lo;
         if (offsetX > hi) offsetX = hi;
     }
@@ -412,6 +444,8 @@ public class CandlestickChartView extends View {
         }
 
         drawOverlays(canvas, chartW, priceTop, priceH, range.max, span);
+
+        drawTradeLines(canvas, chartW, priceTop, priceBottom, priceH, range.max, span);
 
         lastPaint.setColor(COLOR_LAST);
         lastPaint.setStyle(Paint.Style.STROKE);
@@ -601,6 +635,53 @@ public class CandlestickChartView extends View {
         textPaint.setColor(color);
         canvas.drawText(s, x, y, textPaint);
         return x + textPaint.measureText(s);
+    }
+
+    private void drawTradeLines(Canvas canvas, float chartW, float priceTop, float priceBottom,
+                                float priceH, double max, double span) {
+        if (tradeLines.isEmpty()) return;
+        for (TradeLine t : tradeLines) {
+            int entryColor = t.buy ? COLOR_UP : COLOR_DOWN;
+            String tag = (t.pending ? "ORD " : "") + (t.buy ? "BUY" : "SELL");
+            drawTradeLine(canvas, t.entry, entryColor, tag, false, chartW,
+                    priceTop, priceBottom, priceH, max, span);
+            if (t.sl > 0) {
+                drawTradeLine(canvas, t.sl, COLOR_DOWN, "SL", true, chartW,
+                        priceTop, priceBottom, priceH, max, span);
+            }
+            if (t.tp > 0) {
+                drawTradeLine(canvas, t.tp, COLOR_UP, "TP", true, chartW,
+                        priceTop, priceBottom, priceH, max, span);
+            }
+        }
+    }
+
+    private void drawTradeLine(Canvas canvas, double value, int color, String label,
+                               boolean dashed, float chartW, float priceTop, float priceBottom,
+                               float priceH, double max, double span) {
+        float y = mapPrice(value, priceTop, priceH, max, span);
+        if (y < priceTop || y > priceBottom) return;
+        tradePaint.setColor(color);
+        if (dashed) {
+            tradePaint.setPathEffect(new DashPathEffect(new float[]{10f, 8f}, 0f));
+        } else {
+            tradePaint.setPathEffect(null);
+        }
+        canvas.drawLine(0, y, chartW, y, tradePaint);
+
+        String text = label + " " + formatNum(value);
+        float tw = textPaint.measureText(text) + 10f;
+        float th = 30f;
+        float left = chartW - tw - 2f;
+        tradePaint.setPathEffect(null);
+        tradePaint.setStyle(Paint.Style.FILL);
+        tradePaint.setColor(color);
+        canvas.drawRect(left, y - th / 2f, left + tw, y + th / 2f, tradePaint);
+        tradePaint.setStyle(Paint.Style.STROKE);
+        int oldColor = textPaint.getColor();
+        textPaint.setColor(Color.rgb(16, 18, 22));
+        canvas.drawText(text, left + 5f, y + 8f, textPaint);
+        textPaint.setColor(oldColor);
     }
 
     private void drawGrid(Canvas canvas, float chartW, float priceTop, float priceBottom,
