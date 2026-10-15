@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 13,
-    "versionName": "2.2.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.2.0.apk",
-    "apkSha256": "224977dd67e4420581b5a626806872efa8f45244ffb0d1e0220f6f2fa22b6771",
-    "sizeBytes": 70130,
+    "versionCode": 14,
+    "versionName": "2.3.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.3.0.apk",
+    "apkSha256": "826c3de22e8e5f82030a89b3ab57fcee8f023320c24d0e1913d441d94c9c26c4",
+    "sizeBytes": 69564,
     "date": "2026-10-15",
-    "notes": "Feed harga live dari broker MT5 (JustMarkets) untuk XAU/USD!\n\n- Tombol MT5 di header: masukkan host/login/password akun JustMarkets sekali, disimpan lokal\n- Harga XAU/USD di chart & watchlist kini streaming real-time langsung dari server broker\n- Protokol MT5 Web Terminal (WebSocket + AES) diimplementasi native, tanpa library tambahan\n- Auto-reconnect + ping keepalive\n- Pair lain tetap via Binance/Yahoo; emas otomatis fallback bila MT5 tidak aktif"
+    "notes": "Hanya XAU/USD + MT5 prefilled (JustMarkets)\n\n- App kini hanya menampilkan pair XAU/USD\n- Tombol MT5 otomatis terhubung dengan host demo6.justmarketsidn.pro & login 1300048546 (password tersimpan di STB, disembunyikan dari GitHub publik)\n- Feed live dari MT5 broker tetap aktif; harga XAU/USD streaming real-time\n- Pair lain dihilangkan untuk tampilan lebih fokus"
   },
   "data": {
     "version": 2,

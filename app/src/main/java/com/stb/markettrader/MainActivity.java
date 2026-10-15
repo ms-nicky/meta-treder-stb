@@ -23,22 +23,8 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends Activity {
 
-    private static final String[] CRYPTO_PAIRS = {
-            "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
-            "DOGEUSDT", "TRXUSDT", "LTCUSDT", "DOTUSDT", "LINKUSDT", "AVAXUSDT",
-            "MATICUSDT", "NEARUSDT", "APEUSDT", "SHIBUSDT",
-            "PAXGUSDT", "XAUTUSDT", "FILUSDT", "SUIUSDT", "ARBUSDT", "OPUSDT",
-            "UNIUSDT", "AAVEUSDT", "ETCUSDT", "ATOMUSDT", "XLMUSDT"
-    };
-
-    private static final String[] FOREX_PAIRS = {
-            "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD",
-            "NZD/USD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "USD/IDR", "USD/SGD",
-            "USD/MYR", "USD/CNY", "USD/THB", "USD/PHP"
-    };
-
-    private static final String[] METAL_PAIRS = {
-            "XAU/USD", "XAG/USD", "XPT/USD", "XPD/USD"
+    private static final String[] TRADE_PAIRS = {
+            "XAU/USD"
     };
 
     private static final String[] INTERVALS = {"1m", "5m", "15m", "1h", "4h", "1d"};
@@ -63,6 +49,9 @@ public class MainActivity extends Activity {
     private EditText searchText;
 
     private static final String PREF_MT5 = "mt5";
+    private static final String DEFAULT_HOST = "demo6.justmarketsidn.pro";
+    private static final String DEFAULT_LOGIN = "1300048546";
+    private static final String DEFAULT_PASS = "@NiCKY070709";
     private Button brokerButton;
     private Mt5Client mt5Client;
     private boolean mt5Connected = false;
@@ -72,7 +61,7 @@ public class MainActivity extends Activity {
     private List<String> pairs = new ArrayList<String>();
     private final List<String> viewPairs = new ArrayList<String>();
 
-    private String currentPair = "BTCUSDT";
+    private String currentPair = "XAU/USD";
     private String currentInterval = "1m";
     private String lastRenderedKey = "";
 
@@ -127,6 +116,8 @@ public class MainActivity extends Activity {
         searchText = findViewById(R.id.search);
         brokerButton = findViewById(R.id.btn_broker);
         pairButton = findViewById(R.id.btn_pair);
+        searchText.setVisibility(View.GONE);
+        pairButton.setVisibility(View.GONE);
         updateButton = findViewById(R.id.btn_update);
         btnInd = findViewById(R.id.btn_ind);
         btnSub = findViewById(R.id.btn_sub);
@@ -135,9 +126,7 @@ public class MainActivity extends Activity {
         statVol = findViewById(R.id.tv_vol);
         statQVol = findViewById(R.id.tv_qvol);
 
-        pairs.addAll(java.util.Arrays.asList(CRYPTO_PAIRS));
-        pairs.addAll(java.util.Arrays.asList(FOREX_PAIRS));
-        pairs.addAll(java.util.Arrays.asList(METAL_PAIRS));
+        pairs.addAll(java.util.Arrays.asList(TRADE_PAIRS));
         viewPairs.addAll(pairs);
 
         rebuildWatchlist();
@@ -161,7 +150,6 @@ public class MainActivity extends Activity {
         handler.post(clockTask);
         handler.postDelayed(marketTask, 1500);
 
-        loadRemotePairs();
         checkForAppUpdate(false);
         startBrokerClient();
     }
@@ -302,7 +290,7 @@ public class MainActivity extends Activity {
         if (mt5Connected) {
             brokerButton.setText(" MT5 LIVE ");
             brokerButton.setTextColor(0xFF0ECB81);
-        } else if (brokerPrefs().getBoolean("enabled", false)) {
+        } else if (brokerPrefs().getBoolean("enabled", true)) {
             brokerButton.setText(" MT5 ... ");
             brokerButton.setTextColor(0xFFF0B90B);
         } else {
@@ -313,9 +301,9 @@ public class MainActivity extends Activity {
 
     private void showBrokerDialog() {
         SharedPreferences p = brokerPrefs();
-        final EditText hostEt = dialogField("Host", p.getString("host", "demo6.justmarketsidn.pro"));
-        final EditText loginEt = dialogField("Login", p.getString("login", ""));
-        final EditText passEt = dialogField("Password", p.getString("password", ""));
+        final EditText hostEt = dialogField("Host", p.getString("host", DEFAULT_HOST));
+        final EditText loginEt = dialogField("Login", p.getString("login", DEFAULT_LOGIN));
+        final EditText passEt = dialogField("Password", p.getString("password", DEFAULT_PASS));
         passEt.setInputType(android.text.InputType.TYPE_CLASS_TEXT
                 | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
@@ -377,13 +365,13 @@ public class MainActivity extends Activity {
     private void startBrokerClient() {
         stopBrokerClient();
         SharedPreferences p = brokerPrefs();
-        if (!p.getBoolean("enabled", false)) {
+        if (!p.getBoolean("enabled", true)) {
             refreshBrokerButton();
             return;
         }
-        String host = p.getString("host", "demo6.justmarketsidn.pro").trim();
-        String loginS = p.getString("login", "").trim();
-        final String pass = p.getString("password", "");
+        String host = p.getString("host", DEFAULT_HOST).trim();
+        String loginS = p.getString("login", DEFAULT_LOGIN).trim();
+        final String pass = p.getString("password", DEFAULT_PASS);
         if (host.isEmpty() || loginS.isEmpty()) {
             updateConn("MT5: host/login belum diisi");
             return;
