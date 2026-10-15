@@ -154,6 +154,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
                 <TextView
+                    android:id="@+id/lbl_stat1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="24h H: "
@@ -176,6 +177,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
                 <TextView
+                    android:id="@+id/lbl_stat2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="24h L: "
@@ -198,6 +200,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
                 <TextView
+                    android:id="@+id/lbl_stat3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Vol 24h: "
@@ -220,6 +223,7 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
                 <TextView
+                    android:id="@+id/lbl_stat4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="USDT: "
@@ -295,14 +299,93 @@
             <com.stb.markettrader.WatchlistView
                 android:id="@+id/watchlist"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="78dp"
                 android:background="@drawable/bg_card"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:nextFocusUp="@id/search"
                 android:nextFocusLeft="@id/chart"
-                android:nextFocusDown="@id/btn_pair" />
+                android:nextFocusDown="@id/tab_trade" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <Button
+                    android:id="@+id/tab_trade"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="44dp"
+                    android:text="TRADE"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/tf_text"
+                    android:background="@drawable/btn_tf"
+                    android:focusable="true"
+                    android:nextFocusUp="@id/watchlist"
+                    android:stateListAnimator="@null"
+                    android:layout_marginRight="3dp" />
+
+                <Button
+                    android:id="@+id/tab_pos"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="44dp"
+                    android:text="POSISI"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/tf_text"
+                    android:background="@drawable/btn_tf"
+                    android:focusable="true"
+                    android:stateListAnimator="@null"
+                    android:layout_marginRight="3dp" />
+
+                <Button
+                    android:id="@+id/tab_hist"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="44dp"
+                    android:text="RIWAYAT"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/tf_text"
+                    android:background="@drawable/btn_tf"
+                    android:focusable="true"
+                    android:stateListAnimator="@null"
+                    android:layout_marginRight="3dp" />
+
+                <Button
+                    android:id="@+id/tab_dom"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="44dp"
+                    android:text="DOM"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/tf_text"
+                    android:background="@drawable/btn_tf"
+                    android:focusable="true"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <ScrollView
+                android:id="@+id/panel_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_card"
+                android:fillViewport="true">
+
+                <LinearLayout
+                    android:id="@+id/trade_panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp" />
+            </ScrollView>
         </LinearLayout>
     </LinearLayout>
 

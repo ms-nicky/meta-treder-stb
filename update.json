@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 17,
-    "versionName": "2.4.1",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.4.1.apk",
-    "apkSha256": "0376c3025a40e38d5d47a2f5a051c98b3443967d3ee9f4eb899e95104f52dfbf",
-    "sizeBytes": 72249,
+    "versionCode": 18,
+    "versionName": "2.5.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.5.0.apk",
+    "apkSha256": "ee1eb92842e0c511a0dcd6bfa31acf6e680e8878990c25a5e44deb121df14289",
+    "sizeBytes": 86774,
     "date": "2026-10-15",
-    "notes": "Sinyal BUY/SELL pada indikator MACD\n\n- Panah hijau (BUY) muncul saat garis MACD memotong ke atas signal line\n- Panah merah (SELL) muncul saat garis MACD memotong ke bawah signal line\n- Panah ditampilkan di chart saat sub-panel MACD aktif\n- Termasuk garis posisi entry/TP/SL dan fix chart hilang saat geser mentok kanan"
+    "notes": "Trading interaktif penuh dari web terminal broker\n\n- Candle chart kini diambil langsung dari server MT5 (akurat, tanpa Yahoo)\n- Panel akun: Balance, Equity, Floating P/L, Leverage (real-time)\n- Panel TRADE: tombol SELL/BUY, atur volume lot, SL & TP, konfirmasi order\n- Panel POSISI: daftar posisi aktif + P/L berjalan + tombol TUTUP\n- Panel RIWAYAT: daftar transaksi (deals) terakhir\n- Panel DOM: order book / bid-ask-spread\n- Chart menampilkan garis entry/SL/TP dan sinyal MACD BUY/SELL\n- Catatan: order dikirim ke server broker; bila margin kurang, server menolak (lihat pesan status)"
   },
   "data": {
     "version": 2,

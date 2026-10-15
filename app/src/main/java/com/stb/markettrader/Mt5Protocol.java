@@ -14,10 +14,16 @@ final class Mt5Protocol {
     static final int CMD_LOGOUT = 2;
     static final int CMD_GET_ACCOUNT = 3;
     static final int CMD_GET_POSITIONS_ORDERS = 4;
+    static final int CMD_GET_TRADE_HISTORY = 5;
     static final int CMD_GET_SYMBOLS = 6;
     static final int CMD_SUBSCRIBE_TICKS = 7;
     static final int CMD_TICK_PUSH = 8;
     static final int CMD_GET_RATES = 11;
+    static final int CMD_TRADE_REQUEST = 12;
+    static final int CMD_TRADE_UPDATE_PUSH = 10;
+    static final int CMD_ACCOUNT_UPDATE_PUSH = 14;
+    static final int CMD_SUBSCRIBE_BOOK = 22;
+    static final int CMD_BOOK_PUSH = 23;
     static final int CMD_LOGIN = 28;
     static final int CMD_INIT = 29;
     static final int CMD_GET_SYMBOLS_GZIP = 34;
@@ -27,6 +33,22 @@ final class Mt5Protocol {
     static final int TICK_RECORD_SIZE = 50;
     static final int POSITION_RECORD_SIZE = 344;
     static final int ORDER_RECORD_SIZE = 356;
+    static final int DEAL_RECORD_SIZE = 356;
+    static final int RATE_BAR_SIZE = 48;
+    static final int RATE_BAR_EXT_SIZE = 56;
+    static final int ACCOUNT_WEB_MAIN_SIZE = 816;
+    static final int TRADE_REQUEST_SIZE = 236;
+    static final int TRADE_RESULT_SIZE = 120;
+    static final int TRADE_RESULT_MIN_SIZE = 108;
+    static final int TRADE_UPDATE_BALANCE_SIZE = 48;
+    static final int BOOK_HEADER_SIZE = 22;
+    static final int BOOK_LEVEL_SIZE = 16;
+
+    static final int TRADE_ACTION_DEAL = 1;
+    static final int TRADE_ACTION_PENDING = 5;
+    static final int TRADE_ACTION_SLTP = 6;
+    static final int ORDER_TYPE_BUY = 0;
+    static final int ORDER_TYPE_SELL = 1;
 
     static final int POS_SYMBOL_OFF = 24;
     static final int POS_ACTION_OFF = 88;
@@ -35,12 +57,89 @@ final class Mt5Protocol {
     static final int POS_TP_OFF = 116;
     static final int POS_VOLUME_OFF = 124;
     static final int POS_PROFIT_OFF = 132;
+    static final int POS_ID_OFF = 0;
+    static final int POS_CONTRACT_SIZE_OFF = 252;
+    static final int POS_DIGITS_OFF = 260;
 
     static final int ORD_SYMBOL_OFF = 72;
     static final int ORD_TYPE_OFF = 148;
     static final int ORD_PRICE_OFF = 164;
     static final int ORD_SL_OFF = 188;
     static final int ORD_TP_OFF = 196;
+    static final int ORD_ID_OFF = 0;
+    static final int ORD_VOLUME_CURRENT_OFF = 212;
+
+    static final int DEAL_TIME_OFF = 80;
+    static final int DEAL_SYMBOL_OFF = 88;
+    static final int DEAL_ACTION_OFF = 152;
+    static final int DEAL_ENTRY_OFF = 156;
+    static final int DEAL_PRICE_OPEN_OFF = 160;
+    static final int DEAL_PRICE_CLOSE_OFF = 168;
+    static final int DEAL_VOLUME_OFF = 192;
+    static final int DEAL_PROFIT_OFF = 200;
+    static final int DEAL_POSITION_ID_OFF = 248;
+
+    static final int RATE_TIME_OFF = 0;
+    static final int RATE_OPEN_OFF = 4;
+    static final int RATE_HIGH_OFF = 12;
+    static final int RATE_LOW_OFF = 20;
+    static final int RATE_CLOSE_OFF = 28;
+    static final int RATE_TICKVOL_OFF = 36;
+
+    static final int ACC_TYPE_OFF = 0;
+    static final int ACC_BALANCE_OFF = 9;
+    static final int ACC_CREDIT_OFF = 17;
+    static final int ACC_CURRENCY_OFF = 25;
+    static final int ACC_CURRENCY_DIGITS_OFF = 89;
+    static final int ACC_LEVERAGE_OFF = 93;
+    static final int ACC_NAME_OFF = 97;
+    static final int ACC_SERVER_OFF = 355;
+    static final int ACC_PROFIT_OFF = 784;
+
+    static final int TR_TRADE_ACTION_OFF = 4;
+    static final int TR_SYMBOL_OFF = 8;
+    static final int TR_VOLUME_OFF = 72;
+    static final int TR_DIGITS_OFF = 80;
+    static final int TR_ORDER_OFF = 84;
+    static final int TR_TRADE_TYPE_OFF = 92;
+    static final int TR_TYPE_FILLING_OFF = 96;
+    static final int TR_TYPE_TIME_OFF = 100;
+    static final int TR_PRICE_ORDER_OFF = 112;
+    static final int TR_PRICE_SL_OFF = 128;
+    static final int TR_PRICE_TP_OFF = 136;
+    static final int TR_DEVIATION_OFF = 144;
+    static final int TR_COMMENT_OFF = 152;
+    static final int TR_POSITION_ID_OFF = 216;
+
+    static final int TRES_RETCODE_OFF = 0;
+    static final int TRES_DEAL_OFF = 4;
+    static final int TRES_ORDER_OFF = 12;
+    static final int TRES_VOLUME_OFF = 20;
+    static final int TRES_PRICE_OFF = 28;
+    static final int TRES_BID_OFF = 36;
+    static final int TRES_ASK_OFF = 44;
+    static final int TRES_COMMENT_OFF = 52;
+
+    static final int TRADE_PUSH_SIZE = 244;
+    static final int TPUSH_CODE_OFF = 0;
+    static final int TPUSH_SYMBOL_OFF = 12;
+    static final int TPUSH_VOLUME_OFF = 76;
+    static final int TPUSH_ORDER_OFF = 88;
+    static final int TPUSH_PRICE_OFF = 116;
+    static final int TPUSH_COMMENT_OFF = 172;
+
+    static final int TUB_BALANCE_OFF = 0;
+    static final int TUB_CREDIT_OFF = 8;
+    static final int TUB_ACC_PROFIT_OFF = 16;
+    static final int TUB_EQUITY_OFF = 24;
+    static final int TUB_MARGIN_OFF = 32;
+    static final int TUB_MARGIN_FREE_OFF = 40;
+
+    static final int BOOK_BID_COUNT_OFF = 12;
+    static final int BOOK_ASK_COUNT_OFF = 16;
+
+    private static final int[] PERIOD_FROM = {1, 5, 15, 30, 60, 240, 1440, 10080, 43200};
+    private static final int[] PERIOD_TO = {1, 5, 15, 30, 16385, 16388, 16408, 32769, 49153};
 
     private static final byte[] IV = new byte[16];
     private static final byte[] INITIAL_KEY =
@@ -162,6 +261,69 @@ final class Mt5Protocol {
         return b;
     }
 
+    static int mapPeriod(int minutes) {
+        for (int i = 0; i < PERIOD_FROM.length; i++) {
+            if (PERIOD_FROM[i] == minutes) return PERIOD_TO[i];
+        }
+        return minutes;
+    }
+
+    static byte[] buildRatesPayload(String symbol, int periodMinutes, int fromTs, int toTs) {
+        int period = mapPeriod(periodMinutes);
+        Buf b = new Buf();
+        b.utf16(prefix(symbol), 64);
+        byte[] p = new byte[2];
+        p[0] = (byte) (period & 0xff);
+        p[1] = (byte) ((period >> 8) & 0xff);
+        b.raw(p);
+        b.i32(fromTs);
+        b.i32(toTs);
+        return b.done();
+    }
+
+    static byte[] buildHistoryPayload(long fromTs, long toTs) {
+        byte[] b = new byte[8];
+        writeU32(b, 0, fromTs);
+        writeU32(b, 4, toTs);
+        return b;
+    }
+
+    static byte[] buildTradeRequest(int tradeAction, String symbol, long volume, int digits,
+                                    int tradeType, double priceOrder, double priceSl,
+                                    double priceTp, long positionId, String comment) {
+        byte[] out = new byte[TRADE_REQUEST_SIZE];
+        writeU32(out, TR_TRADE_ACTION_OFF, tradeAction);
+        putUtf16(out, TR_SYMBOL_OFF, prefix(symbol), 64);
+        writeU32(out, TR_VOLUME_OFF, volume);
+        writeU32(out, TR_DIGITS_OFF, digits);
+        writeU32(out, TR_TRADE_TYPE_OFF, tradeType);
+        putF64(out, TR_PRICE_ORDER_OFF, priceOrder);
+        putF64(out, TR_PRICE_SL_OFF, priceSl);
+        putF64(out, TR_PRICE_TP_OFF, priceTp);
+        writeU32(out, TR_DEVIATION_OFF, 30);
+        putUtf16(out, TR_COMMENT_OFF, prefix(comment), 64);
+        writeU32(out, TR_POSITION_ID_OFF, positionId);
+        return out;
+    }
+
+    static void putUtf16(byte[] b, int off, String s, int len) {
+        if (s == null) return;
+        int n = Math.min(s.length(), len / 2);
+        for (int i = 0; i < n; i++) {
+            char ch = s.charAt(i);
+            b[off + i * 2] = (byte) (ch & 0xff);
+            b[off + i * 2 + 1] = (byte) ((ch >> 8) & 0xff);
+        }
+    }
+
+    static void putF64(byte[] b, int off, double v) {
+        writeI64(b, off, Double.doubleToLongBits(v));
+    }
+
+    static void writeI64(byte[] b, int off, long v) {
+        for (int i = 0; i < 8; i++) b[off + i] = (byte) ((v >>> (8 * i)) & 0xff);
+    }
+
     static byte[] buildClientId() {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -247,6 +409,13 @@ final class Mt5Protocol {
 
         Buf u64(long v) {
             for (int i = 0; i < 8; i++) o.write((int) ((v >>> (8 * i)) & 0xff));
+            return this;
+        }
+
+        Buf i32(int v) {
+            byte[] b = new byte[4];
+            writeU32(b, 0, v & 0xffffffffL);
+            o.write(b, 0, 4);
             return this;
         }
 
