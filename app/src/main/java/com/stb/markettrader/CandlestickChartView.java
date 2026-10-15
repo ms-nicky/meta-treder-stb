@@ -53,6 +53,7 @@ public class CandlestickChartView extends View {
     private Paint crossPaint;
     private Paint linePaint;
     private Paint tradePaint;
+    private Paint arrowPaint;
 
     public static class TradeLine {
         public final boolean buy;
@@ -148,6 +149,9 @@ public class CandlestickChartView extends View {
         tradePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         tradePaint.setStrokeWidth(1.6f);
         tradePaint.setStyle(Paint.Style.STROKE);
+
+        arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        arrowPaint.setStyle(Paint.Style.FILL);
 
         scaleDetector = new ScaleGestureDetector(getContext(),
                 new ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -443,6 +447,8 @@ public class CandlestickChartView extends View {
             drawCandle(canvas, k, x, priceTop, priceH, span, range.max);
         }
 
+        drawSignals(canvas, chartW, priceTop, priceH, range.max, span);
+
         drawOverlays(canvas, chartW, priceTop, priceH, range.max, span);
 
         drawTradeLines(canvas, chartW, priceTop, priceBottom, priceH, range.max, span);
@@ -635,6 +641,48 @@ public class CandlestickChartView extends View {
         textPaint.setColor(color);
         canvas.drawText(s, x, y, textPaint);
         return x + textPaint.measureText(s);
+    }
+
+    private void drawSignals(Canvas canvas, float chartW, float priceTop, float priceH,
+                             double max, double span) {
+        if (macd == null || subType != SUB_MACD) return;
+        double[] line = macd[0];
+        double[] sig = macd[1];
+        int n = Math.min(line.length, sig.length);
+        for (int i = 1; i < n; i++) {
+            if (Double.isNaN(line[i]) || Double.isNaN(sig[i])
+                    || Double.isNaN(line[i - 1]) || Double.isNaN(sig[i - 1])) continue;
+            boolean buy = line[i - 1] <= sig[i - 1] && line[i] > sig[i];
+            boolean sell = line[i - 1] >= sig[i - 1] && line[i] < sig[i];
+            if (!buy && !sell) continue;
+            float x = i * candleWidth + offsetX + candleWidth / 2f;
+            if (x < -candleWidth || x > chartW) continue;
+            Kline k = data.get(i);
+            if (buy) {
+                float y = mapPrice(k.low, priceTop, priceH, max, span) + 22f;
+                drawArrow(canvas, x, y, true, COLOR_UP);
+            } else {
+                float y = mapPrice(k.high, priceTop, priceH, max, span) - 22f;
+                drawArrow(canvas, x, y, false, COLOR_DOWN);
+            }
+        }
+    }
+
+    private void drawArrow(Canvas canvas, float x, float y, boolean up, int color) {
+        float s = Math.max(7f, Math.min(13f, candleWidth * 0.55f));
+        Path p = new Path();
+        if (up) {
+            p.moveTo(x, y - s);
+            p.lineTo(x - s * 0.75f, y);
+            p.lineTo(x + s * 0.75f, y);
+        } else {
+            p.moveTo(x, y + s);
+            p.lineTo(x - s * 0.75f, y);
+            p.lineTo(x + s * 0.75f, y);
+        }
+        p.close();
+        arrowPaint.setColor(color);
+        canvas.drawPath(p, arrowPaint);
     }
 
     private void drawTradeLines(Canvas canvas, float chartW, float priceTop, float priceBottom,

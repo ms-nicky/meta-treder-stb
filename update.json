@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 16,
-    "versionName": "2.4.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.4.0.apk",
-    "apkSha256": "df9290a39d8644aec24b355009280a09846036bf0ad2307f22d349af127c715c",
-    "sizeBytes": 71726,
+    "versionCode": 17,
+    "versionName": "2.4.1",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.4.1.apk",
+    "apkSha256": "0376c3025a40e38d5d47a2f5a051c98b3443967d3ee9f4eb899e95104f52dfbf",
+    "sizeBytes": 72249,
     "date": "2026-10-15",
-    "notes": "Garis entry/TP/SL dari akun broker + fix chart\n\n- Chart kini menampilkan garis posisi dari akun MT5: garis entry (BUY hijau / SELL merah), garis SL (merah putus-putus) dan TP (hijau putus-putus)\n- Data posisi & order (cmd=4) diambil langsung dari server broker, diperbarui otomatis saat posisi berubah\n- Fix: chart tidak lagi hilang saat di-geser mentok ke kanan\n- Label status menampilkan posisi aktif (mis. SELL 4152.92)"
+    "notes": "Sinyal BUY/SELL pada indikator MACD\n\n- Panah hijau (BUY) muncul saat garis MACD memotong ke atas signal line\n- Panah merah (SELL) muncul saat garis MACD memotong ke bawah signal line\n- Panah ditampilkan di chart saat sub-panel MACD aktif\n- Termasuk garis posisi entry/TP/SL dan fix chart hilang saat geser mentok kanan"
   },
   "data": {
     "version": 2,
