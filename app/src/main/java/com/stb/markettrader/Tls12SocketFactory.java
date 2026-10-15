@@ -75,15 +75,20 @@ public class Tls12SocketFactory extends SSLSocketFactory {
         return socket;
     }
 
+    public static SSLSocketFactory socketFactory(Context context) throws Exception {
+        X509TrustManager system = systemTrustManager();
+        X509TrustManager bundle = bundleTrustManager(context);
+        TrustManager[] managers = new TrustManager[]{new CompositeTrustManager(system, bundle)};
+
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        sslContext.init(null, managers, null);
+        return sslContext.getSocketFactory();
+    }
+
     public static void enable(Context context) {
         try {
-            X509TrustManager system = systemTrustManager();
-            X509TrustManager bundle = bundleTrustManager(context);
-            TrustManager[] managers = new TrustManager[]{new CompositeTrustManager(system, bundle)};
-
-            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-            sslContext.init(null, managers, null);
-            HttpsURLConnection.setDefaultSSLSocketFactory(new Tls12SocketFactory(sslContext.getSocketFactory()));
+            SSLSocketFactory factory = socketFactory(context);
+            HttpsURLConnection.setDefaultSSLSocketFactory(new Tls12SocketFactory(factory));
         } catch (NoSuchAlgorithmException e) {
             System.out.println("TLS1.2 tidak tersedia: " + e.getMessage());
         } catch (KeyManagementException e) {

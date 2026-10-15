@@ -2,6 +2,7 @@ package com.stb.markettrader;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,6 +11,7 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
@@ -59,6 +61,13 @@ public class MainActivity extends Activity {
     private Button btnInd;
     private Button btnSub;
     private EditText searchText;
+
+    private static final String PREF_MT5 = "mt5";
+    private Button brokerButton;
+    private Mt5Client mt5Client;
+    private boolean mt5Connected = false;
+    private long lastLiveRender = 0;
+    private double lastBrokerMid = 0;
 
     private List<String> pairs = new ArrayList<String>();
     private final List<String> viewPairs = new ArrayList<String>();
@@ -116,6 +125,7 @@ public class MainActivity extends Activity {
         connText = findViewById(R.id.conn);
         clockText = findViewById(R.id.tv_clock);
         searchText = findViewById(R.id.search);
+        brokerButton = findViewById(R.id.btn_broker);
         pairButton = findViewById(R.id.btn_pair);
         updateButton = findViewById(R.id.btn_update);
         btnInd = findViewById(R.id.btn_ind);
@@ -137,6 +147,7 @@ public class MainActivity extends Activity {
         setupIndicatorButtons();
         setupWatchlist();
         setupSearch();
+        setupBrokerButton();
 
         symbolText.setText(currentPair);
         refreshButtonStates();
@@ -152,6 +163,7 @@ public class MainActivity extends Activity {
 
         loadRemotePairs();
         checkForAppUpdate(false);
+        startBrokerClient();
     }
 
     private void updateClock() {
@@ -188,6 +200,10 @@ public class MainActivity extends Activity {
             if (t != null) {
                 it.price = t.lastPrice;
                 it.changePct = t.priceChangePercent;
+                it.hasData = true;
+            }
+            if (mt5Connected && lastBrokerMid > 0 && p.startsWith("XAU/")) {
+                it.price = lastBrokerMid;
                 it.hasData = true;
             }
             items.add(it);
@@ -266,6 +282,162 @@ public class MainActivity extends Activity {
                 syncIndicatorLabels();
             }
         });
+    }
+
+    private void setupBrokerButton() {
+        brokerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showBrokerDialog();
+            }
+        });
+        refreshBrokerButton();
+    }
+
+    private SharedPreferences brokerPrefs() {
+        return getSharedPreferences(PREF_MT5, MODE_PRIVATE);
+    }
+
+    private void refreshBrokerButton() {
+        if (mt5Connected) {
+            brokerButton.setText(" MT5 LIVE ");
+            brokerButton.setTextColor(0xFF0ECB81);
+        } else if (brokerPrefs().getBoolean("enabled", false)) {
+            brokerButton.setText(" MT5 ... ");
+            brokerButton.setTextColor(0xFFF0B90B);
+        } else {
+            brokerButton.setText(" MT5 ");
+            brokerButton.setTextColor(getResources().getColor(R.color.btn_pair_text));
+        }
+    }
+
+    private void showBrokerDialog() {
+        SharedPreferences p = brokerPrefs();
+        final EditText hostEt = dialogField("Host", p.getString("host", "demo6.justmarketsidn.pro"));
+        final EditText loginEt = dialogField("Login", p.getString("login", ""));
+        final EditText passEt = dialogField("Password", p.getString("password", ""));
+        passEt.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (getResources().getDisplayMetrics().density * 16);
+        box.setPadding(pad, pad, pad, pad);
+        box.addView(dialogLabel("Server MT5 JustMarkets (host sama seperti web terminal)"));
+        box.addView(hostEt);
+        box.addView(loginEt);
+        box.addView(passEt);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Feed Broker (MT5)")
+                .setView(box)
+                .setPositiveButton("Simpan & Hubungkan", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface d, int w) {
+                        SharedPreferences.Editor e = brokerPrefs().edit();
+                        e.putBoolean("enabled", true);
+                        e.putString("host", hostEt.getText().toString().trim());
+                        e.putString("login", loginEt.getText().toString().trim());
+                        e.putString("password", passEt.getText().toString());
+                        e.apply();
+                        startBrokerClient();
+                    }
+                })
+                .setNeutralButton("Putuskan", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface d, int w) {
+                        SharedPreferences.Editor e = brokerPrefs().edit();
+                        e.putBoolean("enabled", false);
+                        e.apply();
+                        stopBrokerClient();
+                        refreshBrokerButton();
+                        updateConn("MT5 dimatikan");
+                    }
+                })
+                .setNegativeButton("Batal", null)
+                .show();
+    }
+
+    private TextView dialogLabel(String s) {
+        TextView t = new TextView(this);
+        t.setText(s);
+        t.setTextSize(15);
+        t.setPadding(0, 0, 0, 8);
+        return t;
+    }
+
+    private EditText dialogField(String hint, String value) {
+        EditText e = new EditText(this);
+        e.setHint(hint);
+        e.setText(value);
+        e.setSingleLine(true);
+        return e;
+    }
+
+    private void startBrokerClient() {
+        stopBrokerClient();
+        SharedPreferences p = brokerPrefs();
+        if (!p.getBoolean("enabled", false)) {
+            refreshBrokerButton();
+            return;
+        }
+        String host = p.getString("host", "demo6.justmarketsidn.pro").trim();
+        String loginS = p.getString("login", "").trim();
+        final String pass = p.getString("password", "");
+        if (host.isEmpty() || loginS.isEmpty()) {
+            updateConn("MT5: host/login belum diisi");
+            return;
+        }
+        long login;
+        try {
+            login = Long.parseLong(loginS);
+        } catch (Exception e) {
+            updateConn("MT5: login harus angka");
+            return;
+        }
+        try {
+            javax.net.ssl.SSLSocketFactory factory =
+                    Tls12SocketFactory.socketFactory(getApplicationContext());
+            mt5Client = new Mt5Client(host, 443, "/terminal", login, pass, factory,
+                    new Mt5Client.Listener() {
+                        @Override
+                        public void onStatus(final String status, final boolean connected) {
+                            mt5Connected = connected;
+                            if (!connected) lastBrokerMid = 0;
+                            refreshBrokerButton();
+                            if (status != null) updateConn(status);
+                        }
+
+                        @Override
+                        public void onTick(double bid, double ask, long timeSec) {
+                            onLiveTick(bid, ask);
+                        }
+                    });
+            mt5Client.start();
+        } catch (Exception e) {
+            updateConn("MT5: " + e.getMessage());
+        }
+        refreshBrokerButton();
+    }
+
+    private void stopBrokerClient() {
+        if (mt5Client != null) {
+            mt5Client.stop();
+            mt5Client = null;
+        }
+        mt5Connected = false;
+    }
+
+    private void onLiveTick(double bid, double ask) {
+        if (!"XAU/USD".equals(currentPair)) return;
+        double mid = (bid > 0 && ask > 0) ? (bid + ask) / 2 : Math.max(bid, ask);
+        if (mid <= 0) return;
+        lastBrokerMid = mid;
+        long now = System.currentTimeMillis();
+        if (now - lastLiveRender < 200) return;
+        lastLiveRender = now;
+        renderPrice(mid);
+        refreshWatchlistData();
     }
 
     private void syncIndicatorLabels() {
@@ -702,6 +874,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopBrokerClient();
         handler.removeCallbacks(klinesTask);
         handler.removeCallbacks(tickerTask);
         handler.removeCallbacks(marketTask);

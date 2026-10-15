@@ -1,13 +1,13 @@
 {
   "schema": 2,
   "app": {
-    "versionCode": 12,
-    "versionName": "2.1.0",
-    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.1.0.apk",
-    "apkSha256": "cea84c295a5b547db259be9946858f0fec1fa76505072c3041d88994a4366a87",
-    "sizeBytes": 59667,
-    "date": "2026-10-13",
-    "notes": "Real-time + jam WIB + dukungan mouse & keyboard!\n\n- Candle terakhir bergerak real-time mengikuti harga live\n- Jam WIB (Asia/Jakarta) di header\n- Kotak pencarian pair (ketik mis. BTC / EUR / XAU)\n- Mouse: scroll = zoom chart, geser+tahan = pan, hover = crosshair\n- Keyboard: 1-6 timeframe, +/- zoom, M overlay, V sub-panel, P pair, U update, S cari, Esc kembali\n- Perbaikan: error 'unable to resolve' (DNS) jauh lebih jarang (keep-alive + retry + failover host)\n- Fallback emas: XAU/USD otomatis pakai Binance XAUT bila Yahoo bermasalah"
+    "versionCode": 13,
+    "versionName": "2.2.0",
+    "apkUrl": "https://raw.githubusercontent.com/ms-nicky/meta-treder-stb/main/release/MarketTrader-v2.2.0.apk",
+    "apkSha256": "224977dd67e4420581b5a626806872efa8f45244ffb0d1e0220f6f2fa22b6771",
+    "sizeBytes": 70130,
+    "date": "2026-10-15",
+    "notes": "Feed harga live dari broker MT5 (JustMarkets) untuk XAU/USD!\n\n- Tombol MT5 di header: masukkan host/login/password akun JustMarkets sekali, disimpan lokal\n- Harga XAU/USD di chart & watchlist kini streaming real-time langsung dari server broker\n- Protokol MT5 Web Terminal (WebSocket + AES) diimplementasi native, tanpa library tambahan\n- Auto-reconnect + ping keepalive\n- Pair lain tetap via Binance/Yahoo; emas otomatis fallback bila MT5 tidak aktif"
   },
   "data": {
     "version": 2,

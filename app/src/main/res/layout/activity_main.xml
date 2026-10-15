@@ -84,6 +84,25 @@
                 android:layout_height="1dp" />
 
             <Button
+                android:id="@+id/btn_broker"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:minWidth="120dp"
+                android:text=" MT5 "
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/btn_pair_text"
+                android:background="@drawable/btn_update"
+                android:focusable="true"
+                android:stateListAnimator="@null"
+                android:paddingLeft="14dp"
+                android:paddingRight="14dp" />
+
+            <View
+                android:layout_width="10dp"
+                android:layout_height="1dp" />
+
+            <Button
                 android:id="@+id/btn_update"
                 android:layout_width="wrap_content"
                 android:layout_height="46dp"
